@@ -100,7 +100,7 @@ for root, dirs, files in os.walk('.'):
           
           # 4. Specific fix for MOTD (Banner)
           if [ -f etc/motd ]; then
-            echo \"Welcome to NewTermux!\" > etc/motd
+            echo "Welcome to NewTermux!" > etc/motd
           fi
           
           # 5. Ensure execution permissions
@@ -110,7 +110,7 @@ for root, dirs, files in os.walk('.'):
           # 6. Repack bootstrap
           zip -q -r "../bootstrap-${ARCH}.zip" .
           cd ..
-          echo \"Repacked: \$(du -sh bootstrap-\${ARCH}.zip | cut -f1)\"
+          echo "Repacked: $(du -sh bootstrap-${ARCH}.zip | cut -f1)"
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v1
