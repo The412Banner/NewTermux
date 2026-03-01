@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- NewTermux Modern Color Palette (Material 3) -->
+    <!-- Primary brand -->
+    <color name="nt_primary">#BB86FC</color>
+    <color name="nt_primary_variant">#3700B3</color>
+    <color name="nt_secondary">#03DAC6</color>
+    <color name="nt_secondary_variant">#018786</color>
+
+    <!-- Backgrounds -->
+    <color name="nt_background">#121212</color>
+    <color name="nt_surface">#1E1E1E</color>
+    <color name="nt_surface_variant">#2D2D2D</color>
+    <color name="nt_card_background">#252525</color>
+
+    <!-- On colors -->
+    <color name="nt_on_primary">#000000</color>
+    <color name="nt_on_secondary">#000000</color>
+    <color name="nt_on_background">#E1E1E1</color>
+    <color name="nt_on_surface">#E1E1E1</color>
+
+    <!-- Accent / status -->
+    <color name="nt_error">#CF6679</color>
+    <color name="nt_success">#4CAF50</color>
+    <color name="nt_warning">#FFC107</color>
+    <color name="nt_info">#2196F3</color>
+
+    <!-- Terminal specific -->
+    <color name="nt_terminal_bg">#0D0D0D</color>
+    <color name="nt_terminal_fg">#E8E8E8</color>
+    <color name="nt_terminal_cursor">#BB86FC</color>
+    <color name="nt_terminal_selection">#4D3D5E</color>
+
+    <!-- Session tab bar -->
+    <color name="nt_tab_active">#BB86FC</color>
+    <color name="nt_tab_inactive">#6B6B6B</color>
+    <color name="nt_tab_bg">#1A1A1A</color>
+
+    <!-- Toolbar -->
+    <color name="nt_toolbar_bg">#1A1A1A</color>
+    <color name="nt_toolbar_icon">#FFFFFF</color>
+    <color name="nt_toolbar_text">#FFFFFF</color>
+
+    <!-- Root indicator -->
+    <color name="nt_root_active">#FF5252</color>
+    <color name="nt_root_inactive">#6B6B6B</color>
+
+    <!-- STT indicator -->
+    <color name="nt_stt_listening">#F44336</color>
+    <color name="nt_stt_idle">#BB86FC</color>
+
+    <!-- Divider / border -->
+    <color name="nt_divider">#333333</color>
+    <color name="nt_border">#3D3D3D</color>
+</resources>

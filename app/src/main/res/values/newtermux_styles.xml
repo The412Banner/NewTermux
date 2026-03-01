@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base NewTermux theme - Material 3 Dark -->
+    <style name="Theme.NewTermux" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/nt_primary</item>
+        <item name="colorPrimaryVariant">@color/nt_primary_variant</item>
+        <item name="colorSecondary">@color/nt_secondary</item>
+        <item name="colorSecondaryVariant">@color/nt_secondary_variant</item>
+        <item name="android:colorBackground">@color/nt_background</item>
+        <item name="colorSurface">@color/nt_surface</item>
+        <item name="colorError">@color/nt_error</item>
+        <item name="colorOnPrimary">@color/nt_on_primary</item>
+        <item name="colorOnSecondary">@color/nt_on_secondary</item>
+        <item name="colorOnBackground">@color/nt_on_background</item>
+        <item name="colorOnSurface">@color/nt_on_surface</item>
+        <item name="colorOnError">@color/nt_on_primary</item>
+        <item name="android:statusBarColor">@color/nt_background</item>
+        <item name="android:navigationBarColor">@color/nt_tab_bg</item>
+        <item name="android:windowBackground">@color/nt_background</item>
+    </style>
+
+    <!-- Floating Action Button -->
+    <style name="Widget.NewTermux.FAB" parent="Widget.MaterialComponents.FloatingActionButton">
+        <item name="backgroundTint">@color/nt_primary</item>
+        <item name="tint">@color/nt_on_primary</item>
+        <item name="elevation">6dp</item>
+    </style>
+
+    <!-- STT Button -->
+    <style name="Widget.NewTermux.STTButton" parent="Widget.MaterialComponents.Button.Icon">
+        <item name="backgroundTint">@color/nt_surface_variant</item>
+        <item name="iconTint">@color/nt_stt_idle</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="cornerRadius">24dp</item>
+    </style>
+
+    <!-- Root Toggle Button -->
+    <style name="Widget.NewTermux.RootButton" parent="Widget.MaterialComponents.Button.Icon">
+        <item name="backgroundTint">@color/nt_surface_variant</item>
+        <item name="iconTint">@color/nt_root_inactive</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="cornerRadius">24dp</item>
+    </style>
+
+    <!-- Session tab chip -->
+    <style name="Widget.NewTermux.SessionChip" parent="Widget.MaterialComponents.Chip.Choice">
+        <item name="chipBackgroundColor">@color/nt_surface_variant</item>
+        <item name="checkedIconTint">@color/nt_tab_active</item>
+        <item name="android:textColor">@color/nt_on_surface</item>
+        <item name="chipCornerRadius">16dp</item>
+    </style>
+
+    <!-- Toolbar -->
+    <style name="Widget.NewTermux.Toolbar" parent="Widget.MaterialComponents.Toolbar">
+        <item name="android:background">@color/nt_toolbar_bg</item>
+        <item name="titleTextColor">@color/nt_toolbar_text</item>
+        <item name="subtitleTextColor">@color/nt_tab_inactive</item>
+    </style>
+
+    <!-- Bottom sheet dialogs -->
+    <style name="Widget.NewTermux.BottomSheet" parent="Widget.MaterialComponents.BottomSheet">
+        <item name="android:background">@drawable/nt_bottom_sheet_bg</item>
+    </style>
+
+</resources>

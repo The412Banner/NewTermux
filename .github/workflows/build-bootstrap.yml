@@ -1,0 +1,110 @@
+name: Build NewTermux Bootstrap Packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      arch:
+        description: 'Architecture to build for'
+        required: true
+        default: 'aarch64'
+        type: choice
+        options:
+          - aarch64
+          - arm
+          - x86_64
+          - i686
+          - all
+      force_rebuild:
+        description: 'Force rebuild all packages'
+        required: false
+        default: 'false'
+        type: boolean
+  push:
+    tags:
+      - 'bootstrap-*'
+
+jobs:
+  build-bootstrap:
+    name: Build Bootstrap (${{ github.event.inputs.arch || 'aarch64' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 360  # 6 hours for full bootstrap build
+
+    steps:
+      - name: Checkout NewTermux app
+        uses: actions/checkout@v4
+        with:
+          path: newtermux-app
+
+      - name: Clone termux-packages
+        uses: actions/checkout@v4
+        with:
+          repository: termux/termux-packages
+          path: termux-packages
+          depth: 1
+
+      - name: Patch termux-packages for com.newtermux.app prefix
+        run: |
+          cd termux-packages
+          # Change the app package name - this changes the prefix path
+          sed -i 's/^TERMUX_APP_PACKAGE=.*/TERMUX_APP_PACKAGE=com.newtermux.app/' scripts/properties.sh
+          # Verify the change
+          grep TERMUX_APP_PACKAGE scripts/properties.sh
+          echo "PREFIX will be: /data/data/com.newtermux.app/files/usr"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Pull Termux build Docker image
+        run: docker pull termux/package-builder:latest
+
+      - name: Build bootstrap packages (single arch)
+        if: github.event.inputs.arch != 'all'
+        run: |
+          ARCH="${{ github.event.inputs.arch || 'aarch64' }}"
+          FORCE="${{ github.event.inputs.force_rebuild || 'false' }}"
+          cd termux-packages
+          FORCE_FLAG=""
+          if [ "$FORCE" = "true" ]; then
+            FORCE_FLAG="-f"
+          fi
+          ./scripts/run-docker.sh ./scripts/build-bootstraps.sh \
+            --architectures "$ARCH" \
+            $FORCE_FLAG
+          ls -la *.zip || echo "No bootstrap zips found in root"
+          find . -name "bootstrap-*.zip" | head -20
+
+      - name: Build bootstrap packages (all arches)
+        if: github.event.inputs.arch == 'all'
+        run: |
+          cd termux-packages
+          ./scripts/run-docker.sh ./scripts/build-bootstraps.sh \
+            --architectures aarch64 arm x86_64 i686
+          ls -la *.zip 2>/dev/null || true
+          find . -name "bootstrap-*.zip" | head -20
+
+      - name: Collect bootstrap zips
+        run: |
+          mkdir -p bootstrap-output
+          find termux-packages -name "bootstrap-*.zip" -exec cp {} bootstrap-output/ \;
+          ls -la bootstrap-output/
+
+      - name: Upload bootstrap artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: newtermux-bootstrap-${{ github.event.inputs.arch || 'aarch64' }}
+          path: bootstrap-output/*.zip
+          retention-days: 90
+
+      - name: Create Bootstrap Release
+        if: startsWith(github.ref, 'refs/tags/bootstrap-')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: bootstrap-output/*.zip
+          body: |
+            NewTermux Bootstrap Packages for prefix: /data/data/com.newtermux.app/files/usr
+
+            ## Installation
+            These bootstrap archives are automatically used by the NewTermux app on first launch.
+            Place the appropriate architecture zip in: app/src/main/assets/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

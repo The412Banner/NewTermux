@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/stt_overlay"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@color/nt_surface_variant"
+    android:padding="12dp"
+    android:gravity="center_vertical"
+    android:visibility="gone">
+
+    <ImageView
+        android:id="@+id/stt_mic_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_mic"
+        android:tint="@color/nt_stt_listening" />
+
+    <TextView
+        android:id="@+id/stt_status_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:text="Listening..."
+        android:textColor="@color/nt_on_surface"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/stt_partial_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        android:textColor="@color/nt_primary"
+        android:textSize="14sp"
+        android:fontFamily="monospace"
+        android:ellipsize="start"
+        android:singleLine="true" />
+
+</LinearLayout>
