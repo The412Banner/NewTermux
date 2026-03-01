@@ -1,0 +1,62 @@
+name: Build NewTermux Bootstrap from Source
+
+on:
+  workflow_dispatch:
+    inputs:
+      arch:
+        description: 'Architecture to build (aarch64, arm, i686, x86_64)'
+        required: true
+        default: 'aarch64'
+
+jobs:
+  build-bootstrap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360 # Building from source takes a long time
+    
+    steps:
+      - name: Checkout NewTermux
+        uses: actions/checkout@v4
+
+      - name: Clone termux-packages
+        run: |
+          git clone --depth 1 https://github.com/termux/termux-packages.git
+          
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Bootstrap using official scripts
+        run: |
+          cd termux-packages
+          
+          # Configure for NewTermux package name
+          export TERMUX_APP_PACKAGE="com.newtermux.app"
+          
+          # The wiki says: Set TERMUX_APP_PACKAGE to your package name.
+          # We also need to ensure the build environment uses the correct prefix.
+          # The build system automatically derives TERMUX_PREFIX from TERMUX_APP_PACKAGE.
+          
+          echo "Building bootstrap for $TERMUX_APP_PACKAGE on ${{ github.event.inputs.arch }}..."
+          
+          # Run the official bootstrap generation script inside the Termux builder container
+          # We use the -i flag to avoid building everything from source if possible, 
+          # but since we changed the package name, it will likely build from source anyway.
+          # However, generate-bootstraps.sh is the "Correct" entry point.
+          
+          # We need to use the docker image to ensure a consistent environment.
+          ./scripts/run-docker.sh ./scripts/generate-bootstraps.sh --architectures ${{ github.event.inputs.arch }}
+          
+      - name: Upload Bootstrap
+        uses: actions/upload-artifact@v4
+        with:
+          name: bootstrap-${{ github.event.inputs.arch }}-source
+          path: termux-packages/bootstrap-${{ github.event.inputs.arch }}.zip
+
+      - name: Create Release with Source Bootstrap
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          files: termux-packages/bootstrap-${{ github.event.inputs.arch }}.zip
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
