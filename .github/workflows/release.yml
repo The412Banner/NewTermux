@@ -26,7 +26,7 @@ jobs:
       - name: Download official Termux bootstrap
         run: |
           RELEASE_JSON=$(curl -s "https://api.github.com/repos/termux/termux-packages/releases/latest")
-          DOWNLOAD_URL=$(echo "$RELEASE_JSON" | jq -r ".assets[] | select(.name == "bootstrap-${{ matrix.arch }}.zip") | .browser_download_url")
+          DOWNLOAD_URL=$(echo "$RELEASE_JSON" | jq -r ".assets[] | select(.name == 'bootstrap-${{ matrix.arch }}.zip') | .browser_download_url")
           curl -L -o "bootstrap-${{ matrix.arch }}.zip" "$DOWNLOAD_URL"
 
       - name: Patch bootstrap paths
