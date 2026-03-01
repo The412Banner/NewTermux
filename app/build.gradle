@@ -190,7 +190,7 @@ def downloadBootstrap(String arch, String expectedChecksum, String version) {
     }
     */
 
-    def remoteUrl = "https://github.com/The412Banner/NewTermux/releases/download/v1.0.7/bootstrap-" + arch + ".zip"
+    def remoteUrl = "https://github.com/The412Banner/NewTermux/releases/download/v1.0.8/bootstrap-" + arch + ".zip"
     logger.quiet("Downloading " + remoteUrl + " ...")
 
     file.parentFile.mkdirs()
