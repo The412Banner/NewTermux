@@ -151,6 +151,20 @@ final class TermuxInstaller {
                         return;
                     }
 
+                    // Create binary shortcuts for shorter paths (Shortcut Strategy)
+                    try {
+                        String dataDir = activity.getApplicationInfo().dataDir;
+                        File uLink = new File(dataDir, "u");
+                        File hLink = new File(dataDir, "h");
+                        if (uLink.exists()) uLink.delete();
+                        if (hLink.exists()) hLink.delete();
+                        Os.symlink(TERMUX_PREFIX_DIR_PATH, uLink.getAbsolutePath());
+                        Os.symlink(TermuxConstants.TERMUX_HOME_DIR_PATH, hLink.getAbsolutePath());
+                        Logger.logInfo(LOG_TAG, "Created binary shortcuts: /u and /h");
+                    } catch (Exception e) {
+                        Logger.logError(LOG_TAG, "Failed to create binary shortcuts: " + e.getMessage());
+                    }
+
                     Logger.logInfo(LOG_TAG, "Extracting bootstrap zip to prefix staging directory \"" + TERMUX_STAGING_PREFIX_DIR_PATH + "\".");
 
                     final byte[] buffer = new byte[8096];
