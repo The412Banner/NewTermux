@@ -14,85 +14,147 @@ on:
           - x86_64
           - i686
           - all
-      force_rebuild:
-        description: 'Force rebuild all packages'
-        required: false
-        default: 'false'
-        type: boolean
   push:
     tags:
       - 'bootstrap-*'
 
 jobs:
-  build-bootstrap:
-    name: Build Bootstrap (${{ github.event.inputs.arch || 'aarch64' }})
+  determine-arches:
     runs-on: ubuntu-latest
-    timeout-minutes: 360  # 6 hours for full bootstrap build
+    outputs:
+      arches: ${{ steps.set-arches.outputs.arches }}
+    steps:
+      - id: set-arches
+        run: |
+          INPUT="${{ github.event.inputs.arch || 'aarch64' }}"
+          if [ "$INPUT" = "all" ]; then
+            echo 'arches=["aarch64","arm","x86_64","i686"]' >> $GITHUB_OUTPUT
+          else
+            echo "arches=[\"$INPUT\"]" >> $GITHUB_OUTPUT
+          fi
+
+  patch-bootstrap:
+    needs: determine-arches
+    name: Patch Bootstrap (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        arch: ${{ fromJson(needs.determine-arches.outputs.arches) }}
 
     steps:
-      - name: Checkout NewTermux app
-        uses: actions/checkout@v4
-        with:
-          path: newtermux-app
-
-      - name: Clone termux-packages
-        uses: actions/checkout@v4
-        with:
-          repository: termux/termux-packages
-          path: termux-packages
-          depth: 1
-
-      - name: Patch termux-packages for com.newtermux.app prefix
+      - name: Install dependencies
         run: |
-          cd termux-packages
-          # Change the app package name - this changes the prefix path
-          sed -i 's/^TERMUX_APP_PACKAGE=.*/TERMUX_APP_PACKAGE=com.newtermux.app/' scripts/properties.sh
-          # Verify the change
-          grep TERMUX_APP_PACKAGE scripts/properties.sh
-          echo "PREFIX will be: /data/data/com.newtermux.app/files/usr"
+          sudo apt-get update -q
+          sudo apt-get install -y patchelf jq
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Pull Termux build Docker image
-        run: docker pull termux/package-builder:latest
-
-      - name: Build bootstrap packages (single arch)
-        if: github.event.inputs.arch != 'all'
+      - name: Download official Termux bootstrap
         run: |
-          ARCH="${{ github.event.inputs.arch || 'aarch64' }}"
-          FORCE="${{ github.event.inputs.force_rebuild || 'false' }}"
-          cd termux-packages
-          FORCE_FLAG=""
-          if [ "$FORCE" = "true" ]; then
-            FORCE_FLAG="-f"
+          ARCH="${{ matrix.arch }}"
+          echo "Finding latest termux-packages bootstrap release for $ARCH..."
+          RELEASE_JSON=$(curl -s "https://api.github.com/repos/termux/termux-packages/releases/latest")
+          RELEASE_TAG=$(echo "$RELEASE_JSON" | jq -r '.tag_name')
+          echo "Latest release tag: $RELEASE_TAG"
+
+          DOWNLOAD_URL=$(echo "$RELEASE_JSON" \
+            | jq -r ".assets[] | select(.name == \"bootstrap-${ARCH}.zip\") | .browser_download_url")
+
+          if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" = "null" ]; then
+            echo "::error::bootstrap-${ARCH}.zip not found in latest release ($RELEASE_TAG)"
+            echo "Available assets:"
+            echo "$RELEASE_JSON" | jq -r '.assets[].name'
+            exit 1
           fi
-          ./scripts/run-docker.sh ./scripts/build-bootstraps.sh \
-            --architectures "$ARCH" \
-            $FORCE_FLAG
-          ls -la *.zip || echo "No bootstrap zips found in root"
-          find . -name "bootstrap-*.zip" | head -20
 
-      - name: Build bootstrap packages (all arches)
-        if: github.event.inputs.arch == 'all'
+          echo "Downloading: $DOWNLOAD_URL"
+          curl -L --retry 3 -o "bootstrap-${ARCH}.zip" "$DOWNLOAD_URL"
+          echo "Downloaded: $(du -sh bootstrap-${ARCH}.zip | cut -f1)"
+
+      - name: Patch bootstrap paths
         run: |
-          cd termux-packages
-          ./scripts/run-docker.sh ./scripts/build-bootstraps.sh \
-            --architectures aarch64 arm x86_64 i686
-          ls -la *.zip 2>/dev/null || true
-          find . -name "bootstrap-*.zip" | head -20
+          ARCH="${{ matrix.arch }}"
+          OLD_PKG="com.termux"
+          NEW_PKG="com.newtermux.app"
+          OLD_PREFIX="/data/data/${OLD_PKG}/files"
+          NEW_PREFIX="/data/data/${NEW_PKG}/files"
 
-      - name: Collect bootstrap zips
+          echo "Patching: $OLD_PREFIX → $NEW_PREFIX"
+
+          mkdir -p bootstrap-extract
+          unzip -q "bootstrap-${ARCH}.zip" -d bootstrap-extract/
+          cd bootstrap-extract
+
+          # 1. Patch SYMLINKS.txt (absolute symlink targets)
+          if [ -f SYMLINKS.txt ]; then
+            sed -i "s|${OLD_PREFIX}|${NEW_PREFIX}|g" SYMLINKS.txt
+            echo "Patched SYMLINKS.txt"
+          fi
+
+          # 2. Patch text files: shebangs, scripts, config files
+          echo "Patching text files..."
+          TEXT_COUNT=0
+          while IFS= read -r -d '' f; do
+            if file "$f" 2>/dev/null | grep -qiE 'text|script|ASCII|source|shell|python|perl|ruby'; then
+              if grep -qF "$OLD_PREFIX" "$f" 2>/dev/null; then
+                sed -i "s|${OLD_PREFIX}|${NEW_PREFIX}|g" "$f"
+                TEXT_COUNT=$((TEXT_COUNT + 1))
+              fi
+            fi
+          done < <(find . -type f -print0)
+          echo "Patched $TEXT_COUNT text files"
+
+          # 3. Patch ELF rpaths using patchelf
+          echo "Patching ELF rpaths..."
+          ELF_COUNT=0
+          ELF_FAILED=0
+          while IFS= read -r -d '' f; do
+            if file "$f" 2>/dev/null | grep -q 'ELF'; then
+              RPATH=$(patchelf --print-rpath "$f" 2>/dev/null || true)
+              if echo "$RPATH" | grep -qF "$OLD_PKG"; then
+                NEW_RPATH=$(echo "$RPATH" | sed "s|${OLD_PREFIX}|${NEW_PREFIX}|g")
+                if patchelf --set-rpath "$NEW_RPATH" "$f" 2>/dev/null; then
+                  ELF_COUNT=$((ELF_COUNT + 1))
+                else
+                  ELF_FAILED=$((ELF_FAILED + 1))
+                fi
+              fi
+            fi
+          done < <(find . -type f -print0)
+          echo "Patched $ELF_COUNT ELF files (${ELF_FAILED} skipped)"
+
+          # 4. Verification
+          echo "=== Verification ==="
+          REMAINING_TXT=$(find . -type f | xargs grep -lF "$OLD_PREFIX" 2>/dev/null | grep -vE '\.(pyc|class|jar)$' | wc -l || echo 0)
+          echo "Files still containing old prefix: $REMAINING_TXT"
+          if [ "$REMAINING_TXT" -gt 0 ]; then
+            echo "Files with remaining references:"
+            find . -type f | xargs grep -lF "$OLD_PREFIX" 2>/dev/null | grep -vE '\.(pyc|class|jar)$' | head -20
+          fi
+
+          ELF_REMAINING=$(find . -type f | while read f; do
+            file "$f" 2>/dev/null | grep -q 'ELF' && patchelf --print-rpath "$f" 2>/dev/null | grep -qF "$OLD_PKG" && echo "$f"
+          done | wc -l)
+          echo "ELF files with old rpath still: $ELF_REMAINING"
+
+      - name: Repack bootstrap
+        run: |
+          ARCH="${{ matrix.arch }}"
+          cd bootstrap-extract
+          zip -q -r "../bootstrap-${ARCH}.zip" .
+          cd ..
+          echo "Repacked: $(du -sh bootstrap-${ARCH}.zip | cut -f1)"
+
+      - name: Collect bootstrap
         run: |
           mkdir -p bootstrap-output
-          find termux-packages -name "bootstrap-*.zip" -exec cp {} bootstrap-output/ \;
-          ls -la bootstrap-output/
+          cp bootstrap-*.zip bootstrap-output/
+          ls -lh bootstrap-output/
 
-      - name: Upload bootstrap artifacts
+      - name: Upload bootstrap artifact
         uses: actions/upload-artifact@v4
         with:
-          name: newtermux-bootstrap-${{ github.event.inputs.arch || 'aarch64' }}
-          path: bootstrap-output/*.zip
+          name: newtermux-bootstrap-${{ matrix.arch }}
+          path: bootstrap-output/bootstrap-${{ matrix.arch }}.zip
           retention-days: 90
 
       - name: Create Bootstrap Release
@@ -103,8 +165,9 @@ jobs:
           body: |
             NewTermux Bootstrap Packages for prefix: /data/data/com.newtermux.app/files/usr
 
+            Patched from official termux-packages bootstrap with com.termux → com.newtermux.app prefix replacement.
+
             ## Installation
             These bootstrap archives are automatically used by the NewTermux app on first launch.
-            Place the appropriate architecture zip in: app/src/main/assets/
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
