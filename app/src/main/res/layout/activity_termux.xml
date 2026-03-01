@@ -7,6 +7,8 @@
     android:orientation="vertical"
     android:fitsSystemWindows="true">
 
+    <include layout="@layout/newtermux_toolbar" />
+
     <RelativeLayout
         android:id="@+id/activity_termux_root_relative_layout"
         android:layout_width="match_parent"

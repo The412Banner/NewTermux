@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <!DOCTYPE resources [
-    <!ENTITY TERMUX_PACKAGE_NAME "com.termux">
-    <!ENTITY TERMUX_APP_NAME "Termux">
-    <!ENTITY TERMUX_API_APP_NAME "Termux:API">
-    <!ENTITY TERMUX_BOOT_APP_NAME "Termux:Boot">
-    <!ENTITY TERMUX_FLOAT_APP_NAME "Termux:Float">
-    <!ENTITY TERMUX_STYLING_APP_NAME "Termux:Styling">
-    <!ENTITY TERMUX_TASKER_APP_NAME "Termux:Tasker">
-    <!ENTITY TERMUX_WIDGET_APP_NAME "Termux:Widget">
-    <!ENTITY TERMUX_PREFIX_DIR_PATH "/data/data/com.termux/files/usr">
+    <!ENTITY TERMUX_PACKAGE_NAME "com.newtermux.app">
+    <!ENTITY TERMUX_APP_NAME "NewTermux">
+    <!ENTITY TERMUX_API_APP_NAME "NewTermux:API">
+    <!ENTITY TERMUX_BOOT_APP_NAME "NewTermux:Boot">
+    <!ENTITY TERMUX_FLOAT_APP_NAME "NewTermux:Float">
+    <!ENTITY TERMUX_STYLING_APP_NAME "NewTermux:Styling">
+    <!ENTITY TERMUX_TASKER_APP_NAME "NewTermux:Tasker">
+    <!ENTITY TERMUX_WIDGET_APP_NAME "NewTermux:Widget">
+    <!ENTITY TERMUX_PREFIX_DIR_PATH "/data/data/com.newtermux.app/files/usr">
     ]>
 
 <resources>

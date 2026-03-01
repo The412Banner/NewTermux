@@ -191,6 +191,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
     private AutoCorrectHandler mAutoCorrectHandler;
     private ImageButton mBtnSTT;
     private ImageButton mBtnRootToggle;
+    private com.google.android.material.chip.ChipGroup mSessionChipGroup;
     private static final int REQUEST_RECORD_AUDIO = 201;
 
     private static final int CONTEXT_MENU_SELECT_URL_ID = 0;
@@ -595,23 +596,37 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         mRootToggleManager = RootToggleManager.getInstance();
         mAutoCorrectHandler = new AutoCorrectHandler(this);
 
-        // Wire STT button
+        // Wire toolbar buttons
         mBtnSTT = findViewById(R.id.btn_stt);
         if (mBtnSTT != null) {
             mBtnSTT.setOnClickListener(v -> onSTTButtonClicked());
             if (!SpeechInputManager.isAvailable(this)) {
-                mBtnSTT.setAlpha(0.4f); // dim if STT not available
+                mBtnSTT.setAlpha(0.4f);
             }
         }
 
-        // Wire root toggle button — only show on rooted devices
         mBtnRootToggle = findViewById(R.id.btn_root_toggle);
         if (mBtnRootToggle != null) {
             if (RootToggleManager.isDeviceRooted()) {
                 mBtnRootToggle.setVisibility(View.VISIBLE);
                 mBtnRootToggle.setOnClickListener(v -> onRootToggleClicked());
+            } else {
+                mBtnRootToggle.setVisibility(View.GONE);
             }
         }
+
+        ImageButton btnNewSession = findViewById(R.id.btn_new_session);
+        if (btnNewSession != null) {
+            btnNewSession.setOnClickListener(v -> {
+                if (mTermuxTerminalSessionActivityClient != null) {
+                    mTermuxTerminalSessionActivityClient.addNewSession(false, null);
+                }
+            });
+        }
+
+        // Session tabs (ChipGroup)
+        mSessionChipGroup = findViewById(R.id.session_chip_group);
+        updateSessionTabs();
 
         // STT result callback
         mSpeechInputManager.setCallback(new SpeechInputManager.SpeechCallback() {
@@ -632,6 +647,39 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
                 runOnUiThread(() -> updateSTTButtonState(false));
             }
         });
+    }
+
+    /** Update the horizontal session tabs (ChipGroup) */
+    public void updateSessionTabs() {
+        if (mSessionChipGroup == null || mTermuxService == null) return;
+
+        mSessionChipGroup.removeAllViews();
+        java.util.List<com.termux.shared.termux.shell.command.runner.terminal.TermuxSession> sessions = mTermuxService.getTermuxSessions();
+        TerminalSession currentSession = mTermuxTerminalSessionActivityClient.getCurrentSession();
+
+        for (int i = 0; i < sessions.size(); i++) {
+            com.termux.shared.termux.shell.command.runner.terminal.TermuxSession termuxSession = sessions.get(i);
+            TerminalSession session = termuxSession.getTerminalSession();
+            
+            com.google.android.material.chip.Chip chip = new com.google.android.material.chip.Chip(this);
+            chip.setText("Session " + (i + 1));
+            chip.setCheckable(true);
+            chip.setChecked(session == currentSession);
+            chip.setTag(termuxSession);
+            
+            // Modern Material 3 style (can be refined in XML later)
+            chip.setChipBackgroundColorResource(session == currentSession ? R.color.nt_tab_active : R.color.nt_tab_inactive);
+            chip.setTextColor(getResources().getColor(android.R.color.white));
+
+            chip.setOnClickListener(v -> {
+                if (mTermuxTerminalSessionActivityClient != null) {
+                    mTermuxTerminalSessionActivityClient.setCurrentSession(session);
+                    updateSessionTabs();
+                }
+            });
+
+            mSessionChipGroup.addView(chip);
+        }
     }
 
     private void onSTTButtonClicked() {
@@ -1005,6 +1053,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 
     public void termuxSessionListNotifyUpdated() {
         mTermuxSessionListViewController.notifyDataSetChanged();
+        updateSessionTabs();
     }
 
     public boolean isVisible() {
