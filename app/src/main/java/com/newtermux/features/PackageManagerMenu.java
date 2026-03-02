@@ -67,11 +67,11 @@ public class PackageManagerMenu {
         listView.setDivider(new ColorDrawable(Color.parseColor("#333333")));
         listView.setDividerHeight(1);
         
-        mAdapter = new ArrayAdapter<String>(context, android.R.layout.simple_list_item_1, new ArrayList<>(mPackageList)) {
+        mAdapter = new ArrayAdapter<String>(context, android.R.layout.simple_list_item_1, mPackageList) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);
-                android.widget.TextView textView = view.findViewById(android.R.id.text1);
+                android.widget.TextView textView = (android.widget.TextView) view.findViewById(android.R.id.text1);
                 textView.setTextColor(Color.WHITE);
                 textView.setTextSize(14);
                 return view;
@@ -108,8 +108,7 @@ public class PackageManagerMenu {
     private void installPackage(String pkg) {
         TerminalSession session = mActivity.getCurrentSession();
         if (session != null) {
-            String command = "pkg install " + pkg + "
-";
+            String command = "pkg install " + pkg + "\n";
             session.write(command);
         }
     }
