@@ -17,9 +17,9 @@ def patch_file(path, old_str, new_str):
 if __name__ == "__main__":
     # Exact length matches are CRITICAL for binary integrity
     # /data/data/com.termux/files/usr  (31)
-    # /data/data/com.newtermux.app/u   (31)
+    # /data/data/com.newtermux.app//u  (31)
     old_u = "/data/data/com.termux/files/usr"
-    new_u = "/data/data/com.newtermux.app/u"
+    new_u = "/data/data/com.newtermux.app//u"
     
     # /data/data/com.termux/files/home (32)
     # /data/data/com.newtermux.app//h  (32)

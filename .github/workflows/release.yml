@@ -2,24 +2,20 @@ name: NewTermux Full Release
 
 on:
   push:
-    branches: [ main ]
     tags: [ 'v*' ]
   workflow_dispatch:
     inputs:
       tag:
         description: 'Tag to release'
         required: true
-        default: 'v1.1.4'
+        default: 'v1.2.0'
 
 jobs:
   patch-bootstraps:
-    name: Patch Bootstrap (${{ matrix.arch }})
+    name: Patch Bootstraps
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    strategy:
-      matrix:
-        arch: [aarch64, arm, x86_64, i686]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,24 +23,34 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update -q && sudo apt-get install -y patchelf jq zip
 
-      - name: Download official Termux bootstrap
+      - name: Patch all architectures
         run: |
-          RELEASE_JSON=$(curl -s "https://api.github.com/repos/termux/termux-packages/releases/latest")
-          DOWNLOAD_URL=$(echo "$RELEASE_JSON" | jq -r --arg arch "bootstrap-${{ matrix.arch }}.zip" '.assets[] | select(.name == $arch) | .browser_download_url')
-          curl -L -o "bootstrap-${{ matrix.arch }}.zip" "$DOWNLOAD_URL"
-
-      - name: Patch bootstrap paths
-        run: |
-          chmod +x scripts/patch-bootstrap.sh
-          ./scripts/patch-bootstrap.sh ${{ matrix.arch }}
+          for arch in aarch64 arm x86_64 i686; do
+            echo "Processing $arch..."
+            
+            # Download official Termux bootstrap
+            RELEASE_JSON=$(curl -s "https://api.github.com/repos/termux/termux-packages/releases/latest")
+            DOWNLOAD_URL=$(echo "$RELEASE_JSON" | jq -r --arg arch "bootstrap-${arch}.zip" '.assets[] | select(.name == $arch) | .browser_download_url')
+            curl -L -o "bootstrap-${arch}.zip" "$DOWNLOAD_URL"
+            
+            # Patch bootstrap paths
+            chmod +x scripts/patch-bootstrap.sh
+            ./scripts/patch-bootstrap.sh $arch
+          done
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v1
         with:
-          files: bootstrap-${{ matrix.arch }}.zip
+          files: bootstrap-*.zip
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save bootstraps as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: patched-bootstraps
+          path: bootstrap-*.zip
 
   build-apk:
     name: Build NewTermux APK
@@ -64,9 +70,16 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Download patched bootstraps
+        uses: actions/download-artifact@v4
+        with:
+          name: patched-bootstraps
+          path: app/src/main/cpp/
+
       - name: Build APKs
         run: |
           chmod +x ./gradlew
+          # Skip checksum check since we provide files directly
           ./gradlew assembleDebug assembleRelease
 
       - name: Upload to Release
