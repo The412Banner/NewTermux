@@ -38,7 +38,7 @@ jobs:
         with:
           files: app/build/outputs/apk/debug/*.apk
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
-          prerelease: false
+          prerelease: ${{ contains(github.ref_name, '-pre') }}
           generate_release_notes: false
           body: |
             ## NewTermux ${{ github.ref_name }}
