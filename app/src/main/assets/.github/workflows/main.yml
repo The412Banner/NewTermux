@@ -1,0 +1,43 @@
+name: CI
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
+jobs:
+  tests:
+    name: Run tests
+    runs-on: ubuntu-latest
+    if: github.repository == 'ohmyzsh/ohmyzsh'
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
+      - name: Set up git repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install zsh
+        run: sudo apt-get update; sudo apt-get install zsh
+      - name: Check syntax
+        run: |
+          for file in ./oh-my-zsh.sh \
+                      ./lib/*.zsh \
+                      ./plugins/*/*.plugin.zsh \
+                      ./plugins/*/_* \
+                      ./themes/*.zsh-theme; do
+            zsh -n "$file" || return 1
+          done
