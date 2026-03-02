@@ -19,6 +19,15 @@
         <item name="android:navigationBarColor">@color/nt_tab_bg</item>
         <item name="android:windowBackground">@color/nt_background</item>
 
+        <!-- Essential Termux Attributes -->
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="termuxActivityDrawerBackground">@color/nt_surface</item>
+        <item name="termuxActivityDrawerImageTint">@color/nt_on_surface</item>
+        <item name="extraKeysButtonTextColor">@color/nt_on_background</item>
+        <item name="extraKeysButtonActiveTextColor">@color/nt_primary</item>
+        <item name="extraKeysButtonBackgroundColor">@color/nt_background</item>
+        <item name="extraKeysButtonActiveBackgroundColor">@color/nt_surface_variant</item>
+    </style>
         <!-- Critical Termux Attributes to prevent InflateException -->
         <item name="android:windowActionModeOverlay">true</item>
         <item name="termuxActivityDrawerBackground">@color/nt_surface</item>
@@ -72,6 +81,14 @@
     <!-- Bottom sheet dialogs -->
     <style name="Widget.NewTermux.BottomSheet" parent="Widget.MaterialComponents.BottomSheet">
         <item name="android:background">@drawable/nt_bottom_sheet_bg</item>
+    </style>
+
+    <style name="TermuxActivity.Drawer.ButtonBarStyle.Light" parent="@style/Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/nt_on_background</item>
+    </style>
+
+    <style name="TermuxActivity.Drawer.ButtonBarStyle.Dark" parent="@style/Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">@color/nt_on_background</item>
     </style>
 
 </resources>
