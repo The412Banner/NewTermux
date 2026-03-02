@@ -43,8 +43,8 @@ android {
     defaultConfig {
         minSdkVersion project.properties.minSdkVersion.toInteger()
         targetSdkVersion project.properties.targetSdkVersion.toInteger()
-        versionCode 150
-        versionName "0.122.0"
+        versionCode 151
+        versionName "0.122.1"
 
         if (appVersionName) versionName = appVersionName
         validateVersionName(versionName)
