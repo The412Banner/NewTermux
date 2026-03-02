@@ -190,6 +190,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
     private SpeechInputManager mSpeechInputManager;
     private RootToggleManager mRootToggleManager;
     private AutoCorrectHandler mAutoCorrectHandler;
+    private com.newtermux.features.PackageManagerMenu mPackageManagerMenu;
     private View mAutocorrectBar;
     private TextView mAutocorrectText;
     private String mPendingCorrection;
@@ -600,6 +601,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         mSpeechInputManager = new SpeechInputManager(this);
         mRootToggleManager = RootToggleManager.getInstance();
         mAutoCorrectHandler = new AutoCorrectHandler(this);
+        mPackageManagerMenu = new com.newtermux.features.PackageManagerMenu(this);
 
         // Autocorrect UI
         mAutocorrectBar = findViewById(R.id.autocorrect_bar);
@@ -626,6 +628,21 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
             } else {
                 mBtnRootToggle.setVisibility(View.GONE);
             }
+        }
+
+        View btnPackages = findViewById(R.id.btn_packages_menu);
+        if (btnPackages != null) {
+            btnPackages.setOnClickListener(v -> mPackageManagerMenu.show(v));
+        }
+
+        View btnClear = findViewById(R.id.btn_clear_terminal);
+        if (btnClear != null) {
+            btnClear.setOnClickListener(v -> {
+                TerminalSession session = getCurrentSession();
+                if (session != null) {
+                    session.write("clear\n");
+                }
+            });
         }
 
         ImageButton btnNewSession = findViewById(R.id.btn_new_session);

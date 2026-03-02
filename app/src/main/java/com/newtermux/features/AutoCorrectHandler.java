@@ -81,6 +81,37 @@ public class AutoCorrectHandler implements SpellCheckerSession.SpellCheckerSessi
         put("cdown", "chown");
         put("fild", "find");
         put("finf", "find");
+        put("pwn", "pwd");
+        put("pd", "pwd");
+        put("pdw", "pwd");
+        put("mkae", "make");
+        put("amke", "make");
+        put("isntall", "install");
+        put("insatl", "install");
+        put("unzip-", "unzip");
+        put("unzpi", "unzip");
+        put("souce", "source");
+        put("soruce", "source");
+        put("export-", "export");
+        put("expor", "export");
+        put("alais", "alias");
+        put("ailas", "alias");
+        put("whcih", "which");
+        put("wihch", "which");
+        put("touhc", "touch");
+        put("tuoch", "touch");
+        put("clea", "clear");
+        put("claer", "clear");
+        put("sud0", "sudo");
+        put("sduo", "sudo");
+        put("suod", "sudo");
+        put("aptget", "apt-get");
+        put("apt-p", "apt-cache");
+        put("pkg-", "pkg");
+        put("pk-", "pkg");
+        put("chmo", "chmod");
+        put("chmox", "chmod +x");
+        put("chomd", "chmod");
     }};
 
     public AutoCorrectHandler(Context context) {
