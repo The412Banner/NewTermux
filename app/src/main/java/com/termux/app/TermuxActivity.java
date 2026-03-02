@@ -591,7 +591,6 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
     // -----------------------------------------------------------------------------------------
 
     private void setupNewTermuxFeatures() {
-        createCompatibilitySymlinks();
         // Initialize managers
         mSpeechInputManager = new SpeechInputManager(this);
         mRootToggleManager = RootToggleManager.getInstance();

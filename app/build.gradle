@@ -43,16 +43,16 @@ android {
     defaultConfig {
         minSdkVersion project.properties.minSdkVersion.toInteger()
         targetSdkVersion project.properties.targetSdkVersion.toInteger()
-        versionCode 124
-        versionName "0.119.5"
+        versionCode 130
+        versionName "0.120.0"
 
         if (appVersionName) versionName = appVersionName
         validateVersionName(versionName)
 
         buildConfigField "String", "TERMUX_PACKAGE_VARIANT", "\"" + project.ext.packageVariant + "\"" // Used by TermuxApplication class
 
-        applicationId "com.newtermux.app"
-        manifestPlaceholders.TERMUX_PACKAGE_NAME = "com.newtermux.app"
+        applicationId "com.termux"
+        manifestPlaceholders.TERMUX_PACKAGE_NAME = "com.termux"
         manifestPlaceholders.TERMUX_APP_NAME = "NewTermux"
         manifestPlaceholders.TERMUX_API_APP_NAME = "Termux:API"
         manifestPlaceholders.TERMUX_BOOT_APP_NAME = "Termux:Boot"
@@ -190,7 +190,7 @@ def downloadBootstrap(String arch, String expectedChecksum, String version) {
     }
     */
 
-    def remoteUrl = "https://github.com/The412Banner/NewTermux/releases/download/v1.2.5/bootstrap-" + arch + ".zip"
+    def remoteUrl = "https://github.com/termux/termux-packages/releases/download/bootstrap-2026.02.12-r1%2Bapt.android-7/bootstrap-" + arch + ".zip"
     logger.quiet("Downloading " + remoteUrl + " ...")
 
     file.parentFile.mkdirs()
