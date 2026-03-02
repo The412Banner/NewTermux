@@ -244,6 +244,11 @@ public class TermuxTerminalViewClient extends TermuxTerminalViewClientBase {
         if (keyCode == KeyEvent.KEYCODE_ENTER) {
             mCurrentCommand.setLength(0);
             mActivity.checkForAutocorrect(null);
+        } else if (keyCode == KeyEvent.KEYCODE_DEL) {
+            if (mCurrentCommand.length() > 0) {
+                mCurrentCommand.deleteCharAt(mCurrentCommand.length() - 1);
+                mActivity.checkForAutocorrect(mCurrentCommand.toString());
+            }
         }
         if (handleVirtualKeys(keyCode, e, true)) return true;
 
@@ -368,6 +373,7 @@ public class TermuxTerminalViewClient extends TermuxTerminalViewClientBase {
         if (!ctrlDown && !mVirtualControlKeyDown && !mVirtualFnKeyDown) {
             if (Character.isLetterOrDigit(codePoint) || codePoint == '-' || codePoint == '_') {
                 mCurrentCommand.append((char) codePoint);
+                mActivity.checkForAutocorrect(mCurrentCommand.toString());
             } else if (Character.isWhitespace(codePoint)) {
                 if (mCurrentCommand.length() > 0) {
                     mActivity.checkForAutocorrect(mCurrentCommand.toString());

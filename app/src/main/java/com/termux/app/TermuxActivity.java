@@ -765,7 +765,11 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
     }
 
     public void checkForAutocorrect(String text) {
-        if (mAutoCorrectHandler == null || text == null || text.isEmpty()) return;
+        if (mAutoCorrectHandler == null) return;
+        if (text == null || text.trim().isEmpty()) {
+            hideAutocorrectBar();
+            return;
+        }
         String corrected = mAutoCorrectHandler.getCommandCorrection(text);
         if (corrected != null && !corrected.equals(text)) {
             mPendingCorrection = corrected;
