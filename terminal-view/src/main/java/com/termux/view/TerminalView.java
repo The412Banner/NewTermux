@@ -353,12 +353,27 @@ public final class TerminalView extends View {
 
         return new BaseInputConnection(this, true) {
 
+            // Tracks how many composing chars are currently shown in the terminal,
+            // so we can backspace them when the keyboard commits/replaces the word.
+            int mComposingLength = 0;
+
+            @Override
+            public boolean setComposingText(CharSequence text, int newCursorPosition) {
+                // Erase previously mirrored composing chars from the terminal.
+                KeyEvent del = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL);
+                for (int i = 0; i < mComposingLength; i++) sendKeyEvent(del);
+                // Mirror new composing text into the terminal so user sees it immediately.
+                if (text.length() > 0) sendTextToTerminal(text);
+                mComposingLength = text.length();
+                return super.setComposingText(text, newCursorPosition);
+            }
+
             @Override
             public boolean finishComposingText() {
                 if (TERMINAL_VIEW_KEY_LOGGING_ENABLED) mClient.logInfo(LOG_TAG, "IME: finishComposingText()");
+                // Text is already in the terminal — just clear composing state.
+                mComposingLength = 0;
                 super.finishComposingText();
-
-                sendTextToTerminal(getEditable());
                 getEditable().clear();
                 return true;
             }
@@ -368,6 +383,11 @@ public final class TerminalView extends View {
                 if (TERMINAL_VIEW_KEY_LOGGING_ENABLED) {
                     mClient.logInfo(LOG_TAG, "IME: commitText(\"" + text + "\", " + newCursorPosition + ")");
                 }
+                // Erase composing text already shown in terminal before sending final word.
+                KeyEvent del = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL);
+                for (int i = 0; i < mComposingLength; i++) sendKeyEvent(del);
+                mComposingLength = 0;
+
                 super.commitText(text, newCursorPosition);
 
                 if (mEmulator == null) return true;
