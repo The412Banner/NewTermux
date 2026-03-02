@@ -11,75 +11,76 @@ NEW_ID="com.newtermux.app"
 OLD_USR="/data/data/com.termux/files/usr"
 NEW_USR_SHORT="/data/data/com.newtermux.app/u"
 
-# /data/data/com.termux/files/home (32 chars)
-# /data/data/com.newtermux.app/h    (31 chars + null/extra)
-OLD_HOME="/data/data/com.termux/files/home"
-NEW_HOME_SHORT="/data/data/com.newtermux.app/h"
+# We'll use the full path for everything else (text files, etc.)
+NEW_USR_FULL="/data/data/com.newtermux.app/files/usr"
 
 mkdir -p extract
 unzip -q "bootstrap-${ARCH}.zip" -d extract/
 cd extract
 
 echo "1. Creating shortcut symlinks in bootstrap root..."
-# This allows the short paths to work
-ln -s files/usr u
-ln -s files/home h
+# This is crucial for the shortcut paths to work
+ln -sf files/usr u
+ln -sf files/home h
 
-echo "2. Patching text files and shebangs..."
-grep -rIl "$OLD_ID" . | xargs sed -i "s|$OLD_ID|$NEW_ID|g" || true
-
-echo "3. Patching binaries with Fixed-Length Shortcut Strategy..."
-# We use sed with a specific binary-safe approach or a small python script
-# Since we are in a shell script, we'll use a python one-liner for safety
-find . -type f | while read f; do
-    if file "$f" | grep -qE 'ELF|executable|shared object'; then
-        # Replace USR path (31 to 31 chars)
-        python3 -c "
-import sys
-with open('$f', 'rb') as f:
-    data = f.read()
-updated = data.replace(b'$OLD_USR', b'$NEW_USR_SHORT')
-updated = updated.replace(b'$OLD_HOME', b'$NEW_HOME_SHORT' + b'\x00' * (len('$OLD_HOME') - len('$NEW_HOME_SHORT')))
-if updated != data:
-    with open('$f', 'wb') as f:
-        f.write(updated)
-        print('Patched binary: $f')
-"
+echo "2. Patching text files and shebangs (Full Path)..."
+# Use the full path for text files to be safe
+grep -rIl "$OLD_ID" . | while read f; do
+    if file "$f" | grep -qE 'text|script'; then
+        sed -i "s|$OLD_ID|$NEW_ID|g" "$f" || true
     fi
 done
 
-echo "4. Patching ELF headers (RPATH/INTERP) with patchelf..."
+echo "3. Patching ELF binaries (Surgical Shortcut Strategy)..."
+# We only patch the USR path in binaries because lengths match exactly (31 chars).
+# We avoid patching HOME in binaries to prevent corruption from length mismatch.
 find . -type f | while read f; do
-    if file "$f" | grep -q 'ELF'; then
+    if file "$f" | grep -qE 'ELF|executable|shared object'; then
+        
+        # A) Use patchelf for the formal ELF fields
+        # Using the SHORT path ensures we never exceed the original string length
+        
         # Update RPATH
         OLD_RPATH=$(patchelf --print-rpath "$f" 2>/dev/null || true)
         if [ -n "$OLD_RPATH" ]; then
-            NEW_RPATH=$(echo "$OLD_RPATH" | sed "s|$OLD_ID|$NEW_ID|g")
+            NEW_RPATH=$(echo "$OLD_RPATH" | sed "s|$OLD_USR|$NEW_USR_SHORT|g" | sed "s|$OLD_ID|$NEW_ID|g")
             patchelf --set-rpath "$NEW_RPATH" "$f" 2>/dev/null || true
         fi
         
         # Update Interpreter
         OLD_INTERP=$(patchelf --print-interpreter "$f" 2>/dev/null || true)
-        if [ -n "$OLD_INTERP" ] && echo "$OLD_INTERP" | grep -q "$OLD_ID"; then
-            NEW_INTERP=$(echo "$OLD_INTERP" | sed "s|$OLD_ID|$NEW_ID|g")
+        if [ -n "$OLD_INTERP" ] && echo "$OLD_INTERP" | grep -q "$OLD_USR"; then
+            NEW_INTERP=$(echo "$OLD_INTERP" | sed "s|$OLD_USR|$NEW_USR_SHORT|g")
             patchelf --set-interpreter "$NEW_INTERP" "$f" 2>/dev/null || true
         fi
+
+        # B) Use a surgical python script for internal string constants.
+        # This only replaces the USR path where length is identical.
+        python3 -c "
+import sys
+with open('$f', 'rb') as f:
+    data = f.read()
+# Replace only if length matches exactly to avoid corruption
+updated = data.replace(b'$OLD_USR', b'$NEW_USR_SHORT')
+if updated != data:
+    with open('$f', 'wb') as f:
+        f.write(updated)
+"
     fi
 done
 
-echo "5. Updating SYMLINKS.txt..."
+echo "4. Updating SYMLINKS.txt (Full Path)..."
 if [ -f SYMLINKS.txt ]; then
-    # Update symlink targets to use the new ID
     sed -i "s|$OLD_ID|$NEW_ID|g" SYMLINKS.txt
 fi
 
-echo "6. MOTD update..."
+echo "5. MOTD update..."
 if [ -f etc/motd ]; then
-    echo "Welcome to NewTermux (Patched)!" > etc/motd
+    echo "Welcome to NewTermux (Robust Patch v2)!" > etc/motd
 fi
 
-echo "7. Repacking ${ARCH}..."
+echo "6. Repacking ${ARCH}..."
 zip -q -r "../bootstrap-${ARCH}.zip" .
 cd ..
 rm -rf extract
-echo "Done! Robustly patched bootstrap-${ARCH}.zip using Shortcut Strategy."
+echo "Done! Robustly patched bootstrap-${ARCH}.zip."

@@ -43,8 +43,8 @@ android {
     defaultConfig {
         minSdkVersion project.properties.minSdkVersion.toInteger()
         targetSdkVersion project.properties.targetSdkVersion.toInteger()
-        versionCode 121
-        versionName "0.119.2"
+        versionCode 122
+        versionName "0.119.3"
 
         if (appVersionName) versionName = appVersionName
         validateVersionName(versionName)
@@ -190,7 +190,7 @@ def downloadBootstrap(String arch, String expectedChecksum, String version) {
     }
     */
 
-    def remoteUrl = "https://github.com/The412Banner/NewTermux/releases/download/v1.2.2/bootstrap-" + arch + ".zip"
+    def remoteUrl = "https://github.com/The412Banner/NewTermux/releases/download/v1.2.3/bootstrap-" + arch + ".zip"
     logger.quiet("Downloading " + remoteUrl + " ...")
 
     file.parentFile.mkdirs()
