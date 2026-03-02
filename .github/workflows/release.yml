@@ -8,7 +8,7 @@ on:
       tag:
         description: 'Tag to release'
         required: true
-        default: 'v1.5.2'
+        default: 'v1.5.4'
 
 jobs:
   build-apk:
@@ -28,19 +28,48 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build APKs
+      - name: Decode release keystore
+        run: |
+          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > ${{ github.workspace }}/app/newtermux-release.jks
+
+      - name: Build signed release APK
+        env:
+          RELEASE_KEYSTORE_PATH: ${{ github.workspace }}/app/newtermux-release.jks
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: |
           chmod +x ./gradlew
-          # Build APKs - this will download official bootstraps automatically
-          ./gradlew assembleDebug assembleRelease
+          ./gradlew assembleRelease
 
-      - name: Upload to Release
+      - name: Upload signed APK to release
         uses: softprops/action-gh-release@v1
         with:
-          files: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/apk/debug/*.apk
+          files: app/build/outputs/apk/release/*.apk
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
-          generate_release_notes: true
+          prerelease: false
+          generate_release_notes: false
+          body: |
+            ## NewTermux ${{ github.ref_name }}
+
+            ### What's New
+            - **Settings button** in the top toolbar (between Root Toggle and + button) — tap the gear icon for instant access to settings
+            - **Session close button** — each session chip now has an × to instantly kill and remove a session
+            - **Package Manager** — browse and install packages directly from the toolbar
+            - **Clear button** — one-tap terminal clear in the toolbar
+            - **Auto-Correct bar** — suggests corrections for mistyped shell commands
+            - **Speech-to-Text** — tap the mic icon to speak commands into the terminal
+            - **Root Toggle** — instantly switch to a root session on rooted devices
+            - **Oh My Zsh** — bundled and auto-extracted on first launch
+            - **Material 3 Dark UI** — modern theme with session chips for tab management
+
+            ### Installation
+            Download the APK for your architecture:
+            - `arm64-v8a` — most modern Android phones
+            - `armeabi-v7a` — older 32-bit ARM devices
+            - `x86_64` / `x86` — emulators and x86 devices
+            - `universal` — works on all devices (larger file size)
+
+            > **Note:** NewTermux uses the `com.termux` package name for full binary compatibility. Uninstall the original Termux before installing.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

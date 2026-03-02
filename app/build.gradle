@@ -85,10 +85,17 @@ android {
             storePassword 'xrj45yWGLbsO7W0v'
             keyPassword 'xrj45yWGLbsO7W0v'
         }
+        release {
+            storeFile file(System.getenv("RELEASE_KEYSTORE_PATH") ?: "testkey_untrusted.jks")
+            keyAlias System.getenv("RELEASE_KEY_ALIAS") ?: "alias"
+            storePassword System.getenv("RELEASE_STORE_PASSWORD") ?: "xrj45yWGLbsO7W0v"
+            keyPassword System.getenv("RELEASE_KEY_PASSWORD") ?: "xrj45yWGLbsO7W0v"
+        }
     }
 
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled true
             shrinkResources false // Reproducible builds
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'

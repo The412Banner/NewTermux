@@ -45,3 +45,4 @@ local.properties
 .gradle/
 app/release/
 bootstrap-output/
+newtermux-release.jks
