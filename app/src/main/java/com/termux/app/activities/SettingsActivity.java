@@ -8,7 +8,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.SwitchPreferenceCompat;
 
+import com.termux.app.TermuxInstaller;
+
+import com.newtermux.features.NewTermuxSettings;
 import com.newtermux.features.NewTermuxTheme;
 
 import com.termux.R;
@@ -164,6 +168,52 @@ public class SettingsActivity extends AppCompatActivity {
                     ShareUtils.openUrl(context, TermuxConstants.TERMUX_DONATE_URL);
                     return true;
                 });
+            }
+        }
+    }
+
+    public static class FeaturesPreferencesFragment extends PreferenceFragmentCompat {
+        @Override
+        public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
+            setPreferencesFromResource(R.xml.newtermux_features_preferences, rootKey);
+            Context context = getContext();
+            if (context == null) return;
+
+            // Sync initial states from our settings store into the preference UI
+            String[] boolKeys = {
+                NewTermuxSettings.KEY_KEYBOARD_SUGGESTIONS,
+                NewTermuxSettings.KEY_SHOW_AC_BUTTON,
+                NewTermuxSettings.KEY_SHOW_ROOT_BUTTON,
+                NewTermuxSettings.KEY_SHOW_STT_BUTTON,
+                NewTermuxSettings.KEY_SHOW_PACKAGES_BUTTON,
+                NewTermuxSettings.KEY_SHOW_CLEAR_BUTTON,
+                NewTermuxSettings.KEY_SESSION_TABS,
+                NewTermuxSettings.KEY_OH_MY_ZSH,
+                NewTermuxSettings.KEY_ZSH_AUTOSUGGESTIONS
+            };
+            for (String key : boolKeys) {
+                SwitchPreferenceCompat pref = findPreference(key);
+                if (pref == null) continue;
+                pref.setChecked(NewTermuxSettings.get(context, key));
+            }
+
+            // Generic listener: save to our prefs, then handle side effects
+            Preference.OnPreferenceChangeListener listener = (preference, newValue) -> {
+                boolean val = (Boolean) newValue;
+                String key = preference.getKey();
+                NewTermuxSettings.set(context, key, val);
+
+                if (NewTermuxSettings.KEY_ZSH_AUTOSUGGESTIONS.equals(key)) {
+                    new Thread(() -> TermuxInstaller.setZshAutosuggestions(context, val)).start();
+                } else if (NewTermuxSettings.KEY_OH_MY_ZSH.equals(key) && val) {
+                    new Thread(() -> TermuxInstaller.installOhMyZsh(context)).start();
+                }
+                return true;
+            };
+
+            for (String key : boolKeys) {
+                Preference pref = findPreference(key);
+                if (pref != null) pref.setOnPreferenceChangeListener(listener);
             }
         }
     }

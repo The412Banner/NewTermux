@@ -63,7 +63,7 @@ public final class TerminalView extends View {
     private TerminalCursorBlinkerRunnable mTerminalCursorBlinkerRunnable;
     private int mTerminalCursorBlinkerRate;
     private boolean mCursorInvisibleIgnoreOnce;
-    private boolean mKeyboardSuggestionsEnabled = true;
+    private boolean mKeyboardSuggestionsEnabled = false;
     public static final int TERMINAL_CURSOR_BLINK_RATE_MIN = 100;
     public static final int TERMINAL_CURSOR_BLINK_RATE_MAX = 2000;
 

@@ -72,6 +72,7 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 
 import com.newtermux.features.AutoCorrectHandler;
+import com.newtermux.features.NewTermuxSettings;
 import com.newtermux.features.NewTermuxTheme;
 import com.newtermux.features.RootToggleManager;
 import com.newtermux.features.SpeechInputManager;
@@ -348,6 +349,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 
         mIsOnResumeAfterOnCreate = false;
         applyAccentColor();
+        applyFeatureSettings();
     }
 
     private void applyAccentColor() {
@@ -365,6 +367,21 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 
         // Session chips
         updateSessionTabs();
+    }
+
+    private void applyFeatureSettings() {
+        setVisible(R.id.btn_autocorrect_toggle, NewTermuxSettings.isShowAcButton(this));
+        setVisible(R.id.btn_root_toggle, NewTermuxSettings.isShowRootButton(this));
+        setVisible(R.id.btn_stt, NewTermuxSettings.isShowSttButton(this));
+        setVisible(R.id.btn_packages_menu, NewTermuxSettings.isShowPackagesButton(this));
+        setVisible(R.id.btn_clear_terminal, NewTermuxSettings.isShowClearButton(this));
+        // Hide/show the whole scroll container (chip group lives inside it)
+        setVisible(R.id.session_tabs_scroll, NewTermuxSettings.isSessionTabsEnabled(this));
+    }
+
+    private void setVisible(int id, boolean visible) {
+        View v = findViewById(id);
+        if (v != null) v.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -679,10 +696,16 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 
         android.widget.TextView btnAC = findViewById(R.id.btn_autocorrect_toggle);
         if (btnAC != null) {
+            // Apply saved AC state
+            boolean acEnabled = NewTermuxSettings.isKeyboardSuggestionsEnabled(this);
+            mTerminalView.setKeyboardSuggestionsEnabled(acEnabled);
+            if (mAutoCorrectHandler != null) mAutoCorrectHandler.setEnabled(acEnabled);
+
             btnAC.setOnClickListener(v -> {
                 boolean nowEnabled = !mTerminalView.isKeyboardSuggestionsEnabled();
                 mTerminalView.setKeyboardSuggestionsEnabled(nowEnabled);
                 if (mAutoCorrectHandler != null) mAutoCorrectHandler.setEnabled(nowEnabled);
+                NewTermuxSettings.setKeyboardSuggestions(this, nowEnabled);
                 int color = getResources().getColor(
                     nowEnabled ? R.color.nt_primary : R.color.nt_on_surface, getTheme());
                 btnAC.setTextColor(color);

@@ -7,6 +7,12 @@
         app:fragment="com.termux.app.activities.SettingsActivity$AppearancePreferencesFragment"/>
 
     <Preference
+        app:key="newtermux_features"
+        app:title="Features"
+        app:summary="Toggle NewTermux features on or off"
+        app:fragment="com.termux.app.activities.SettingsActivity$FeaturesPreferencesFragment"/>
+
+    <Preference
         app:key="termux"
         app:title="@string/termux_preferences_title"
         app:summary="@string/termux_preferences_summary"

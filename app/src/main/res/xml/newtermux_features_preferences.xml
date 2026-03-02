@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="Keyboard">
+        <SwitchPreferenceCompat app:key="keyboard_suggestions"
+            app:title="Keyboard Suggestions"
+            app:summary="Show autocorrect and word suggestions bar"
+            app:defaultValue="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Toolbar Buttons">
+        <SwitchPreferenceCompat app:key="show_ac_button"
+            app:title="AC Toggle Button"
+            app:summary="Show autocorrect on/off button in toolbar"
+            app:defaultValue="true" />
+        <SwitchPreferenceCompat app:key="show_root_button"
+            app:title="Root Toggle Button"
+            app:defaultValue="true" />
+        <SwitchPreferenceCompat app:key="show_stt_button"
+            app:title="Speech-to-Text Button"
+            app:defaultValue="true" />
+        <SwitchPreferenceCompat app:key="show_packages_button"
+            app:title="Package Manager Button"
+            app:defaultValue="true" />
+        <SwitchPreferenceCompat app:key="show_clear_button"
+            app:title="Clear Terminal Button"
+            app:defaultValue="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Session Tabs">
+        <SwitchPreferenceCompat app:key="session_tabs"
+            app:title="Show Session Tabs"
+            app:summary="Show session tab chips at the top"
+            app:defaultValue="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Shell">
+        <SwitchPreferenceCompat app:key="oh_my_zsh"
+            app:title="Oh My Zsh"
+            app:summary="Auto-install Oh My Zsh and use zsh as default shell"
+            app:defaultValue="true" />
+        <SwitchPreferenceCompat app:key="zsh_autosuggestions"
+            app:title="zsh-autosuggestions"
+            app:summary="Fish-like inline suggestions (requires Oh My Zsh)"
+            app:defaultValue="true" />
+    </PreferenceCategory>
+
+</PreferenceScreen>
