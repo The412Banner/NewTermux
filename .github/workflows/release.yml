@@ -38,6 +38,7 @@ jobs:
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          TERMUX_SPLIT_APKS_FOR_RELEASE_BUILDS: "1"
         run: |
           chmod +x ./gradlew
           ./gradlew downloadBootstraps assembleRelease
