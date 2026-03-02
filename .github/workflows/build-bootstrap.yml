@@ -23,83 +23,86 @@ jobs:
 
       - name: Download official bootstrap
         run: |
-          # We pull the latest bootstrap from termux-packages releases
-          # For simplicity, we can use the ones from the termux-main repository directly
-          # or from the github releases.
+          ARCH_INPUT="${{ github.event.inputs.arch }}"
+          if [ "$ARCH_INPUT" = "all" ]; then
+            ARCHES="aarch64 arm x86_64 i686"
+          else
+            ARCHES="$ARCH_INPUT"
+          fi
           
-          ARCH=${{ github.event.inputs.arch }}
-          URL="https://github.com/termux/termux-packages/releases/latest/download/bootstrap-${ARCH}.zip"
-          
-          echo "Downloading bootstrap from $URL..."
-          curl -L "$URL" -o "bootstrap-${ARCH}.zip"
+          for ARCH in $ARCHES; do
+            URL="https://github.com/termux/termux-packages/releases/latest/download/bootstrap-${ARCH}.zip"
+            echo "Downloading bootstrap for $ARCH from $URL..."
+            curl -L "$URL" -o "bootstrap-${ARCH}.zip"
+          done
 
       - name: Patch Bootstrap
         run: |
-          ARCH=${{ github.event.inputs.arch }}
-          OLD_PREFIX="/data/data/com.termux/files/usr"
-          NEW_PREFIX="/data/data/com.newtermux.app/files/usr"
+          ARCH_INPUT="${{ github.event.inputs.arch }}"
+          if [ "$ARCH_INPUT" = "all" ]; then
+            ARCHES="aarch64 arm x86_64 i686"
+          else
+            ARCHES="$ARCH_INPUT"
+          fi
+          
           OLD_ID="com.termux"
           NEW_ID="com.newtermux.app"
           
-          mkdir extract
-          unzip -q "bootstrap-${ARCH}.zip" -d extract/
-          cd extract
-          
-          echo "1. Patching text files and shebangs..."
-          # Fix shebangs and other text occurrences
-          grep -rIl "$OLD_ID" . | xargs sed -i "s|$OLD_ID|$NEW_ID|g" || true
-          
-          echo "2. Patching ELF binaries..."
-          # Use patchelf for rpath and interpreter
-          # Also use sed for hardcoded strings in binaries (risky but often necessary if not building from source)
-          # Note: Since NEW_PREFIX is longer than OLD_PREFIX, we can't easily sed binaries 
-          # without corrupting them UNLESS we use the shortcut approach or patchelf.
-          
-          # Find all ELF files
-          find . -type f | while read f; do
-            if file "$f" | grep -q 'ELF'; then
-              echo "Patching ELF: $f"
-              # Update RPATH
-              OLD_RPATH=$(patchelf --print-rpath "$f" 2>/dev/null || true)
-              if [ -n "$OLD_RPATH" ]; then
-                NEW_RPATH=$(echo "$OLD_RPATH" | sed "s|$OLD_ID|$NEW_ID|g")
-                patchelf --set-rpath "$NEW_RPATH" "$f" 2>/dev/null || true
+          for ARCH in $ARCHES; do
+            echo "Processing architecture: $ARCH"
+            mkdir "extract_${ARCH}"
+            unzip -q "bootstrap-${ARCH}.zip" -d "extract_${ARCH}/"
+            pushd "extract_${ARCH}"
+            
+            echo "1. Patching text files and shebangs for $ARCH..."
+            grep -rIl "$OLD_ID" . | xargs sed -i "s|$OLD_ID|$NEW_ID|g" || true
+            
+            echo "2. Patching ELF binaries for $ARCH..."
+            find . -type f | while read f; do
+              if file "$f" | grep -q 'ELF'; then
+                # Update RPATH
+                OLD_RPATH=$(patchelf --print-rpath "$f" 2>/dev/null || true)
+                if [ -n "$OLD_RPATH" ]; then
+                  NEW_RPATH=$(echo "$OLD_RPATH" | sed "s|$OLD_ID|$NEW_ID|g")
+                  patchelf --set-rpath "$NEW_RPATH" "$f" 2>/dev/null || true
+                fi
+                
+                # Update Interpreter
+                OLD_INTERP=$(patchelf --print-interpreter "$f" 2>/dev/null || true)
+                if [ -n "$OLD_INTERP" ] && echo "$OLD_INTERP" | grep -q "$OLD_ID"; then
+                  NEW_INTERP=$(echo "$OLD_INTERP" | sed "s|$OLD_ID|$NEW_ID|g")
+                  patchelf --set-interpreter "$NEW_INTERP" "$f" 2>/dev/null || true
+                fi
               fi
-              
-              # Update Interpreter (dynamic linker path)
-              OLD_INTERP=$(patchelf --print-interpreter "$f" 2>/dev/null || true)
-              if [ -n "$OLD_INTERP" ] && echo "$OLD_INTERP" | grep -q "$OLD_ID"; then
-                NEW_INTERP=$(echo "$OLD_INTERP" | sed "s|$OLD_ID|$NEW_ID|g")
-                patchelf --set-interpreter "$NEW_INTERP" "$f" 2>/dev/null || true
-              fi
+            done
+            
+            echo "3. Updating SYMLINKS.txt for $ARCH..."
+            if [ -f SYMLINKS.txt ]; then
+              sed -i "s|$OLD_ID|$NEW_ID|g" SYMLINKS.txt
             fi
+            
+            echo "4. MOTD update for $ARCH..."
+            if [ -f etc/motd ]; then
+              echo "Welcome to NewTermux!" > etc/motd
+            fi
+            
+            echo "5. Repacking $ARCH..."
+            zip -q -r "../bootstrap-${ARCH}.zip" .
+            popd
+            rm -rf "extract_${ARCH}"
           done
-          
-          echo "3. Updating SYMLINKS.txt..."
-          if [ -f SYMLINKS.txt ]; then
-            sed -i "s|$OLD_ID|$NEW_ID|g" SYMLINKS.txt
-          fi
-          
-          echo "4. MOTD update..."
-          if [ -f etc/motd ]; then
-            echo "Welcome to NewTermux!" > etc/motd
-          fi
-          
-          echo "5. Repacking..."
-          zip -q -r "../bootstrap-${ARCH}.zip" .
-          cd ..
           
       - name: Upload Bootstrap
         uses: actions/upload-artifact@v4
         with:
-          name: bootstrap-${{ github.event.inputs.arch }}
-          path: bootstrap-${{ github.event.inputs.arch }}.zip
+          name: bootstrap-all
+          path: bootstrap-*.zip
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/v')
         with:
-          files: bootstrap-${{ github.event.inputs.arch }}.zip
+          files: bootstrap-*.zip
           tag_name: ${{ github.ref_name }}
           generate_release_notes: true
         env:
