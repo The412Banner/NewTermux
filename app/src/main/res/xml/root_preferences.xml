@@ -7,6 +7,12 @@
         app:fragment="com.termux.app.activities.SettingsActivity$AppearancePreferencesFragment"/>
 
     <Preference
+        app:key="newtermux_backup"
+        app:title="Backup &amp; Restore"
+        app:summary="Back up or restore your Termux environment"
+        app:fragment="com.termux.app.activities.SettingsActivity$BackupPreferencesFragment"/>
+
+    <Preference
         app:key="newtermux_features"
         app:title="Features"
         app:summary="Toggle NewTermux features on or off"

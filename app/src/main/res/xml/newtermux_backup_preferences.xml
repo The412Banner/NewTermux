@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory app:title="Data">
+        <Preference
+            app:key="backup_now"
+            app:title="Backup"
+            app:summary="Save home and usr to /sdcard/Download/termux-backup.tar.gz"
+            app:persistent="false" />
+        <Preference
+            app:key="restore_now"
+            app:title="Restore"
+            app:summary="Pick a backup file to restore from"
+            app:persistent="false" />
+    </PreferenceCategory>
+</PreferenceScreen>

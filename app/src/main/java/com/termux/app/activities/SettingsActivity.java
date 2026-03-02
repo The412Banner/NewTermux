@@ -1,10 +1,16 @@
 package com.termux.app.activities;
 
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
@@ -169,6 +175,140 @@ public class SettingsActivity extends AppCompatActivity {
                     return true;
                 });
             }
+        }
+    }
+
+    public static class BackupPreferencesFragment extends PreferenceFragmentCompat {
+
+        private ActivityResultLauncher<String[]> mRestoreFilePicker;
+
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            mRestoreFilePicker = registerForActivityResult(
+                new ActivityResultContracts.OpenDocument(),
+                uri -> {
+                    if (uri == null) return;
+                    Context ctx = getContext();
+                    if (ctx == null) return;
+                    new AlertDialog.Builder(ctx)
+                        .setTitle("Restore Termux")
+                        .setMessage("This will overwrite your current Termux files. Continue?")
+                        .setPositiveButton("Restore", (d, w) -> runRestore(ctx, uri))
+                        .setNegativeButton("Cancel", null)
+                        .show();
+                }
+            );
+        }
+
+        @Override
+        public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
+            setPreferencesFromResource(R.xml.newtermux_backup_preferences, rootKey);
+            Context context = getContext();
+            if (context == null) return;
+
+            Preference backupPref = findPreference("backup_now");
+            if (backupPref != null) {
+                backupPref.setOnPreferenceClickListener(pref -> {
+                    runBackup(context);
+                    return true;
+                });
+            }
+
+            Preference restorePref = findPreference("restore_now");
+            if (restorePref != null) {
+                restorePref.setOnPreferenceClickListener(pref -> {
+                    mRestoreFilePicker.launch(new String[]{"*/*"});
+                    return true;
+                });
+            }
+        }
+
+        private void runBackup(Context context) {
+            ProgressDialog dialog = new ProgressDialog(context);
+            dialog.setMessage("Backing up\u2026");
+            dialog.setCancelable(false);
+            dialog.show();
+            new Thread(() -> {
+                String error = null;
+                try {
+                    runCommand(new String[]{"termux-setup-storage"});
+                    Process p = Runtime.getRuntime().exec(new String[]{
+                        "tar", "-zcvf", "/sdcard/Download/termux-backup.tar.gz",
+                        "-C", "/data/data/com.termux/files", "./home", "./usr"
+                    });
+                    String errText = readStream(p.getErrorStream());
+                    int exit = p.waitFor();
+                    if (exit != 0) error = errText;
+                } catch (Exception e) {
+                    error = e.getMessage();
+                }
+                final String finalError = error;
+                requireActivity().runOnUiThread(() -> {
+                    dialog.dismiss();
+                    Toast.makeText(context,
+                        finalError == null ? "Backup complete" : "Backup failed: " + finalError,
+                        finalError == null ? Toast.LENGTH_SHORT : Toast.LENGTH_LONG
+                    ).show();
+                });
+            }).start();
+        }
+
+        private void runRestore(Context context, Uri fileUri) {
+            ProgressDialog dialog = new ProgressDialog(context);
+            dialog.setMessage("Restoring\u2026");
+            dialog.setCancelable(false);
+            dialog.show();
+            new Thread(() -> {
+                String error = null;
+                try {
+                    String filePath;
+                    if ("content".equals(fileUri.getScheme())) {
+                        java.io.File tmp = new java.io.File(context.getCacheDir(), "restore_tmp.tar.gz");
+                        try (java.io.InputStream in = context.getContentResolver().openInputStream(fileUri);
+                             java.io.FileOutputStream out = new java.io.FileOutputStream(tmp)) {
+                            byte[] buf = new byte[8192];
+                            int n;
+                            while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+                        }
+                        filePath = tmp.getAbsolutePath();
+                    } else {
+                        filePath = fileUri.getPath();
+                    }
+                    Process p = Runtime.getRuntime().exec(new String[]{
+                        "tar", "-zxvf", filePath,
+                        "-C", "/data/data/com.termux/files",
+                        "--recursive-unlink", "--preserve-permissions"
+                    });
+                    String errText = readStream(p.getErrorStream());
+                    int exit = p.waitFor();
+                    if (exit != 0) error = errText;
+                } catch (Exception e) {
+                    error = e.getMessage();
+                }
+                final String finalError = error;
+                requireActivity().runOnUiThread(() -> {
+                    dialog.dismiss();
+                    Toast.makeText(context,
+                        finalError == null ? "Restore complete" : "Restore failed: " + finalError,
+                        finalError == null ? Toast.LENGTH_SHORT : Toast.LENGTH_LONG
+                    ).show();
+                });
+            }).start();
+        }
+
+        private static int runCommand(String[] cmd) throws Exception {
+            Process p = Runtime.getRuntime().exec(cmd);
+            p.waitFor();
+            return p.exitValue();
+        }
+
+        private static String readStream(java.io.InputStream is) throws java.io.IOException {
+            java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+            byte[] buf = new byte[4096];
+            int n;
+            while ((n = is.read(buf)) != -1) baos.write(buf, 0, n);
+            return baos.toString();
         }
     }
 
