@@ -379,11 +379,24 @@ final class TermuxInstaller {
         File omzDir = new File(TermuxConstants.TERMUX_HOME_DIR_PATH, ".oh-my-zsh");
         if (omzDir.exists()) return; // Already installed
 
-        Logger.logInfo(LOG_TAG, "Installing bundled Oh My Zsh...");
-        try {
-            // Copy from assets
-            FileUtils.copyAssetDirectory(context, "oh-my-zsh", omzDir.getAbsolutePath(), true);
-            
+        Logger.logInfo(LOG_TAG, "Installing bundled Oh My Zsh zip...");
+        try (ZipInputStream zipInput = new ZipInputStream(context.getAssets().open("oh-my-zsh.zip"))) {
+            ZipEntry zipEntry;
+            byte[] buffer = new byte[8096];
+            while ((zipEntry = zipInput.getNextEntry()) != null) {
+                File targetFile = new File(TermuxConstants.TERMUX_HOME_DIR_PATH, zipEntry.getName());
+                if (zipEntry.isDirectory()) {
+                    ensureDirectoryExists(targetFile);
+                } else {
+                    ensureDirectoryExists(targetFile.getParentFile());
+                    try (FileOutputStream outStream = new FileOutputStream(targetFile)) {
+                        int readBytes;
+                        while ((readBytes = zipInput.read(buffer)) != -1)
+                            outStream.write(buffer, 0, readBytes);
+                    }
+                }
+            }
+
             // Create a default .zshrc if missing
             File zshrc = new File(TermuxConstants.TERMUX_HOME_DIR_PATH, ".zshrc");
             if (!zshrc.exists()) {
