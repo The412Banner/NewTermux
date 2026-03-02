@@ -591,6 +591,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
     // -----------------------------------------------------------------------------------------
 
     private void setupNewTermuxFeatures() {
+        createCompatibilitySymlinks();
         // Initialize managers
         mSpeechInputManager = new SpeechInputManager(this);
         mRootToggleManager = RootToggleManager.getInstance();
@@ -679,6 +680,27 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
             });
 
             mSessionChipGroup.addView(chip);
+        }
+    }
+
+    private void createCompatibilitySymlinks() {
+        try {
+            java.io.File dataDir = getFilesDir().getParentFile();
+            if (dataDir == null) return;
+
+            // fil -> files/usr (31 chars)
+            java.io.File fil = new java.io.File(dataDir, "fil");
+            if (!fil.exists()) {
+                android.system.Os.symlink("files/usr", fil.getAbsolutePath());
+            }
+
+            // file -> files/home (32 chars)
+            java.io.File file = new java.io.File(dataDir, "file");
+            if (!file.exists()) {
+                android.system.Os.symlink("files/home", file.getAbsolutePath());
+            }
+        } catch (Exception e) {
+            android.util.Log.e("NewTermux", "Failed to create compatibility symlinks", e);
         }
     }
 

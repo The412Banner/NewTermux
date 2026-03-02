@@ -8,7 +8,7 @@ on:
       tag:
         description: 'Tag to release'
         required: true
-        default: 'v1.2.4'
+        default: 'v1.2.5'
 
 jobs:
   patch-bootstraps:
