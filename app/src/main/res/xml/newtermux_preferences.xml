@@ -1,0 +1,45 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        app:title="Shell Settings">
+
+        <ListPreference
+            app:key="default_shell"
+            app:title="Default Shell"
+            app:summary="Select which shell to start by default"
+            app:entries="@array/shell_entries"
+            app:entryValues="@array/shell_values"
+            app:defaultValue="bash" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:title="Oh My Zsh Customization">
+
+        <SwitchPreferenceCompat
+            app:key="enable_oh_my_zsh"
+            app:title="Enable Oh My Zsh"
+            app:summary="Enable Oh My Zsh framework enhancements"
+            app:defaultValue="true" />
+
+        <ListPreference
+            app:dependency="enable_oh_my_zsh"
+            app:key="omz_theme"
+            app:title="Theme"
+            app:summary="Select Oh My Zsh theme"
+            app:entries="@array/omz_theme_entries"
+            app:entryValues="@array/omz_theme_values"
+            app:defaultValue="robbyrussell" />
+
+        <MultiSelectListPreference
+            app:dependency="enable_oh_my_zsh"
+            app:key="omz_plugins"
+            app:title="Plugins"
+            app:summary="Select active plugins"
+            app:entries="@array/omz_plugin_entries"
+            app:entryValues="@array/omz_plugin_values"
+            app:defaultValue="@array/omz_plugin_defaults" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

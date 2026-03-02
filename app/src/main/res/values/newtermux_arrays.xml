@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shell Options -->
+    <string-array name="shell_entries">
+        <item>Bash (Default)</item>
+        <item>Zsh</item>
+    </string-array>
+    <string-array name="shell_values">
+        <item>bash</item>
+        <item>zsh</item>
+    </string-array>
+
+    <!-- OMZ Themes -->
+    <string-array name="omz_theme_entries">
+        <item>RobbyRussell (Classic)</item>
+        <item>Agnoster (Modern)</item>
+        <item>Agnoster-NewTermux</item>
+        <item>ZSH_THEME="random"</item>
+    </string-array>
+    <string-array name="omz_theme_values">
+        <item>robbyrussell</item>
+        <item>agnoster</item>
+        <item>agnoster-newtermux</item>
+        <item>random</item>
+    </string-array>
+
+    <!-- OMZ Plugins -->
+    <string-array name="omz_plugin_entries">
+        <item>Git</item>
+        <item>Zsh Auto-suggestions</item>
+        <item>Zsh Syntax Highlighting</item>
+        <item>Python</item>
+        <item>Extract</item>
+    </string-array>
+    <string-array name="omz_plugin_values">
+        <item>git</item>
+        <item>zsh-autosuggestions</item>
+        <item>zsh-syntax-highlighting</item>
+        <item>python</item>
+        <item>extract</item>
+    </string-array>
+    <string-array name="omz_plugin_defaults">
+        <item>git</item>
+        <item>zsh-autosuggestions</item>
+        <item>zsh-syntax-highlighting</item>
+    </string-array>
+</resources>

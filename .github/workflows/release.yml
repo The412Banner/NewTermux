@@ -8,7 +8,7 @@ on:
       tag:
         description: 'Tag to release'
         required: true
-        default: 'v1.4.0'
+        default: 'v1.4.1'
 
 jobs:
   build-apk:

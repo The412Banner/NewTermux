@@ -208,10 +208,12 @@
 <service android:name="com.termux.api.apis.SpeechToTextAPI$SpeechToTextService"
     android:exported="false" />
 
-<service android:name="com.termux.api.apis.TextToSpeechAPI$TextToSpeechService"
-    android:exported="false" />
-<!-- End Termux:API Components -->
+        <service android:name="com.termux.api.apis.TextToSpeechAPI$TextToSpeechService"
+            android:exported="false" />
+        <!-- End Termux:API Components -->
 
+        <activity
+            android:name=".app.TermuxActivity"
             android:taskAffinity="${TERMUX_PACKAGE_NAME}.filereceiver"
             tools:targetApi="n">
         </activity>
