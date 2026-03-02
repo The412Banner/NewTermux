@@ -8,7 +8,7 @@ on:
       tag:
         description: 'Tag to release'
         required: true
-        default: 'v1.5.4'
+        default: 'v1.6.0'
 
 jobs:
   build-apk:
@@ -40,7 +40,7 @@ jobs:
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: |
           chmod +x ./gradlew
-          ./gradlew assembleRelease
+          ./gradlew downloadBootstraps assembleRelease
 
       - name: Upload signed APK to release
         uses: softprops/action-gh-release@v1
