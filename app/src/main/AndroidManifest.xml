@@ -111,6 +111,13 @@
             android:theme="@style/Theme.NewTermux" />
 
         <activity
+            android:name=".app.activities.FileManagerActivity"
+            android:exported="false"
+            android:label="File Manager"
+            android:parentActivityName=".app.activities.SettingsActivity"
+            android:theme="@style/Theme.NewTermux" />
+
+        <activity
             android:name=".shared.activities.ReportActivity"
             android:theme="@style/Theme.MarkdownViewActivity.DayNight"
             android:documentLaunchMode="intoExisting" />

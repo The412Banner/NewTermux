@@ -13,6 +13,12 @@
         app:persistent="false" />
 
     <Preference
+        app:key="file_manager"
+        app:title="File Manager"
+        app:summary="Browse, edit, and manage files in your Termux home"
+        app:persistent="false" />
+
+    <Preference
         app:key="newtermux_backup"
         app:title="Backup &amp; Restore"
         app:summary="Back up or restore your Termux environment"

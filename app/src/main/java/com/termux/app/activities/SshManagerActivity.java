@@ -10,9 +10,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ScrollView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -87,16 +90,16 @@ public class SshManagerActivity extends AppCompatActivity {
 
     private void confirmConnect(SshProfile profile) {
         new AlertDialog.Builder(this)
-            .setTitle("Connect")
-            .setMessage("Connect to " + profile.nickname + "?\n" + profile.displayLabel())
+            .setTitle("Connect to " + profile.nickname)
+            .setMessage(profile.displayLabel()
+                + (profile.tunnelEnabled ? "\nTunnel: " + profile.tunnelLabel() : ""))
             .setPositiveButton("Connect", (d, w) -> connect(profile))
             .setNegativeButton("Cancel", null)
             .show();
     }
 
     private void connect(SshProfile profile) {
-        String cmd = profile.buildCommand() + "\n";
-        NewTermuxSettings.setPendingCommand(this, cmd);
+        NewTermuxSettings.setPendingCommand(this, profile.buildCommand() + "\n");
         finishAffinity();
     }
 
@@ -128,54 +131,125 @@ public class SshManagerActivity extends AppCompatActivity {
     private void showAddEditDialog(SshProfile existing) {
         boolean isEdit = existing != null;
         Context ctx = this;
-        int dp8 = dp(8);
         int dp16 = dp(16);
+        int dp8 = dp(8);
 
+        // Wrap in ScrollView so the dialog is usable on small screens
+        ScrollView scroll = new ScrollView(ctx);
         LinearLayout layout = new LinearLayout(ctx);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setPadding(dp16, dp8, dp16, dp8);
+        scroll.addView(layout);
 
+        // --- Connection fields ---
         EditText etNickname = makeField(ctx, "Nickname (e.g. My Server)", InputType.TYPE_CLASS_TEXT);
-        EditText etHost = makeField(ctx, "Host (e.g. 192.168.1.1)", InputType.TYPE_CLASS_TEXT);
-        EditText etPort = makeField(ctx, "Port", InputType.TYPE_CLASS_NUMBER);
-        EditText etUser = makeField(ctx, "Username", InputType.TYPE_CLASS_TEXT);
-        EditText etKey = makeField(ctx, "Key path (optional, e.g. ~/.ssh/id_rsa)",
-            InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+        EditText etHost     = makeField(ctx, "Host (e.g. 192.168.1.1)", InputType.TYPE_CLASS_TEXT);
+        EditText etPort     = makeField(ctx, "Port", InputType.TYPE_CLASS_NUMBER);
+        EditText etUser     = makeField(ctx, "Username", InputType.TYPE_CLASS_TEXT);
+        EditText etKey      = makeField(ctx, "Key path (optional, e.g. ~/.ssh/id_rsa)",
+                                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
         etKey.setTypeface(Typeface.MONOSPACE);
-
         etPort.setText("22");
 
+        layout.addView(label(ctx, "Nickname"));      layout.addView(etNickname);
+        layout.addView(label(ctx, "Host"));          layout.addView(etHost);
+        layout.addView(label(ctx, "Port"));          layout.addView(etPort);
+        layout.addView(label(ctx, "Username"));      layout.addView(etUser);
+        layout.addView(label(ctx, "Private Key Path (leave blank for password auth)"));
+        layout.addView(etKey);
+
+        // --- Tunnel divider ---
+        TextView divider = new TextView(ctx);
+        divider.setText("— Port Forwarding —");
+        divider.setGravity(Gravity.CENTER);
+        divider.setTypeface(null, Typeface.BOLD);
+        LinearLayout.LayoutParams divLp = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        divLp.topMargin = dp(16);
+        divLp.bottomMargin = dp(4);
+        divider.setLayoutParams(divLp);
+        layout.addView(divider);
+
+        // --- Tunnel toggle ---
+        Switch swTunnel = new Switch(ctx);
+        swTunnel.setText("Enable port forwarding");
+        layout.addView(swTunnel);
+
+        // --- Tunnel fields (shown/hidden by switch) ---
+        LinearLayout tunnelFields = new LinearLayout(ctx);
+        tunnelFields.setOrientation(LinearLayout.VERTICAL);
+
+        // Type selector row
+        LinearLayout typeRow = new LinearLayout(ctx);
+        typeRow.setOrientation(LinearLayout.HORIZONTAL);
+        typeRow.setWeightSum(2f);
+
+        android.widget.RadioButton rbLocal  = new android.widget.RadioButton(ctx);
+        rbLocal.setText("Local (-L)");
+        android.widget.RadioButton rbRemote = new android.widget.RadioButton(ctx);
+        rbRemote.setText("Remote (-R)");
+        rbLocal.setChecked(true);
+
+        LinearLayout.LayoutParams half = new LinearLayout.LayoutParams(0,
+            LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        rbLocal.setLayoutParams(half);
+        rbRemote.setLayoutParams(half);
+
+        // Make them act as a radio group
+        rbLocal.setOnCheckedChangeListener((b, checked) -> { if (checked) rbRemote.setChecked(false); });
+        rbRemote.setOnCheckedChangeListener((b, checked) -> { if (checked) rbLocal.setChecked(false); });
+
+        typeRow.addView(rbLocal);
+        typeRow.addView(rbRemote);
+
+        EditText etLocalPort    = makeField(ctx, "Local port (e.g. 8080)", InputType.TYPE_CLASS_NUMBER);
+        EditText etRemoteHost   = makeField(ctx, "Remote host (e.g. localhost)", InputType.TYPE_CLASS_TEXT);
+        EditText etRemotePort   = makeField(ctx, "Remote port (e.g. 8080)", InputType.TYPE_CLASS_NUMBER);
+
+        tunnelFields.addView(label(ctx, "Type"));
+        tunnelFields.addView(typeRow);
+        tunnelFields.addView(label(ctx, "Local Port"));    tunnelFields.addView(etLocalPort);
+        tunnelFields.addView(label(ctx, "Remote Host"));   tunnelFields.addView(etRemoteHost);
+        tunnelFields.addView(label(ctx, "Remote Port"));   tunnelFields.addView(etRemotePort);
+        tunnelFields.setVisibility(View.GONE);
+        layout.addView(tunnelFields);
+
+        swTunnel.setOnCheckedChangeListener((b, checked) ->
+            tunnelFields.setVisibility(checked ? View.VISIBLE : View.GONE));
+
+        // --- Populate existing values ---
         if (isEdit) {
             etNickname.setText(existing.nickname);
             etHost.setText(existing.host);
             etPort.setText(String.valueOf(existing.port));
             etUser.setText(existing.username);
             etKey.setText(existing.keyPath);
+            swTunnel.setChecked(existing.tunnelEnabled);
+            tunnelFields.setVisibility(existing.tunnelEnabled ? View.VISIBLE : View.GONE);
+            rbRemote.setChecked("remote".equals(existing.tunnelType));
+            rbLocal.setChecked(!"remote".equals(existing.tunnelType));
+            etLocalPort.setText(String.valueOf(existing.tunnelLocalPort));
+            etRemoteHost.setText(existing.tunnelRemoteHost);
+            etRemotePort.setText(String.valueOf(existing.tunnelRemotePort));
+        } else {
+            etLocalPort.setText("8080");
+            etRemoteHost.setText("localhost");
+            etRemotePort.setText("8080");
         }
-
-        layout.addView(label(ctx, "Nickname"));
-        layout.addView(etNickname);
-        layout.addView(label(ctx, "Host"));
-        layout.addView(etHost);
-        layout.addView(label(ctx, "Port"));
-        layout.addView(etPort);
-        layout.addView(label(ctx, "Username"));
-        layout.addView(etUser);
-        layout.addView(label(ctx, "Private Key Path (leave blank for password auth)"));
-        layout.addView(etKey);
 
         new AlertDialog.Builder(ctx)
             .setTitle(isEdit ? "Edit Profile" : "Add SSH Profile")
-            .setView(layout)
+            .setView(scroll)
             .setPositiveButton("Save", (d, w) -> {
                 String nickname = etNickname.getText().toString().trim();
-                String host = etHost.getText().toString().trim();
-                String portStr = etPort.getText().toString().trim();
-                String user = etUser.getText().toString().trim();
-                String key = etKey.getText().toString().trim();
+                String host     = etHost.getText().toString().trim();
+                String portStr  = etPort.getText().toString().trim();
+                String user     = etUser.getText().toString().trim();
+                String key      = etKey.getText().toString().trim();
 
                 if (nickname.isEmpty() || host.isEmpty() || user.isEmpty()) {
-                    Toast.makeText(ctx, "Nickname, host, and username are required", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ctx, "Nickname, host, and username are required",
+                        Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -188,6 +262,13 @@ public class SshManagerActivity extends AppCompatActivity {
                 profile.port = port;
                 profile.username = user;
                 profile.keyPath = key;
+                profile.tunnelEnabled = swTunnel.isChecked();
+                profile.tunnelType = rbRemote.isChecked() ? "remote" : "local";
+                try { profile.tunnelLocalPort = Integer.parseInt(etLocalPort.getText().toString().trim()); }
+                    catch (NumberFormatException ignored) { profile.tunnelLocalPort = 8080; }
+                profile.tunnelRemoteHost = etRemoteHost.getText().toString().trim();
+                try { profile.tunnelRemotePort = Integer.parseInt(etRemotePort.getText().toString().trim()); }
+                    catch (NumberFormatException ignored) { profile.tunnelRemotePort = 8080; }
 
                 if (!isEdit) mProfiles.add(profile);
                 SshProfileStore.save(mProfiles);
@@ -203,7 +284,7 @@ public class SshManagerActivity extends AppCompatActivity {
         et.setInputType(inputType);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        lp.bottomMargin = dp(8);
+        lp.bottomMargin = dp(4);
         et.setLayoutParams(lp);
         return et;
     }
@@ -248,7 +329,11 @@ public class SshManagerActivity extends AppCompatActivity {
                 sub.setTextSize(13f);
                 row.addView(sub);
 
-                holder = new ViewHolder(title, sub);
+                TextView tunnel = new TextView(getContext());
+                tunnel.setTextSize(11f);
+                row.addView(tunnel);
+
+                holder = new ViewHolder(title, sub, tunnel);
                 row.setTag(holder);
                 convertView = row;
             } else {
@@ -259,13 +344,20 @@ public class SshManagerActivity extends AppCompatActivity {
             if (profile != null) {
                 holder.title.setText(profile.nickname);
                 holder.sub.setText(profile.displayLabel());
+                String tl = profile.tunnelLabel();
+                if (tl != null) {
+                    holder.tunnel.setText("Tunnel: " + tl);
+                    holder.tunnel.setVisibility(View.VISIBLE);
+                } else {
+                    holder.tunnel.setVisibility(View.GONE);
+                }
             }
             return convertView;
         }
 
         static class ViewHolder {
-            final TextView title, sub;
-            ViewHolder(TextView t, TextView s) { title = t; sub = s; }
+            final TextView title, sub, tunnel;
+            ViewHolder(TextView t, TextView s, TextView tn) { title = t; sub = s; tunnel = tn; }
         }
     }
 }

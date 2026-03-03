@@ -106,6 +106,14 @@ public class SettingsActivity extends AppCompatActivity {
                     return true;
                 });
             }
+
+            Preference fileManagerPref = findPreference("file_manager");
+            if (fileManagerPref != null) {
+                fileManagerPref.setOnPreferenceClickListener(pref -> {
+                    startActivity(new Intent(context, FileManagerActivity.class));
+                    return true;
+                });
+            }
         }
 
         private void configureTermuxAPIPreference(@NonNull Context context) {
