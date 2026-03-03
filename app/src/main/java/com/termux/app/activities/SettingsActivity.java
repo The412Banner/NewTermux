@@ -407,6 +407,7 @@ public class SettingsActivity extends AppCompatActivity {
                 NewTermuxSettings.KEY_SESSION_TABS,
                 NewTermuxSettings.KEY_AUTOCORRECT,
                 NewTermuxSettings.KEY_SHOW_DRAWER_EXPORT_SCRIPT,
+                NewTermuxSettings.KEY_SHOW_DRAWER_PKG_UPDATE,
                 NewTermuxSettings.KEY_SHOW_DRAWER_CMD_BUTTONS,
             };
             for (String key : boolKeys) {

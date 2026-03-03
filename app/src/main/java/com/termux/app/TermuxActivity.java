@@ -446,13 +446,18 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         // Autocorrect initial enabled state
         if (mAutoCorrectHandler != null)
             mAutoCorrectHandler.setEnabled(NewTermuxSettings.isAutocorrectEnabled(this));
-        // Drawer utility buttons (Export · Script · Update)
-        boolean showUtil = NewTermuxSettings.isShowDrawerExportScript(this);
-        boolean showCmd  = NewTermuxSettings.isShowDrawerCmdButtons(this);
-        setVisible(R.id.drawer_util_row,      showUtil);
-        setVisible(R.id.drawer_util_divider,  showUtil && showCmd);
-        setVisible(R.id.drawer_cmd_container, showCmd);
-        setVisible(R.id.drawer_cmd_controls,  showCmd);
+        // Drawer buttons
+        boolean showUtil      = NewTermuxSettings.isShowDrawerExportScript(this);
+        boolean showPkgUpdate = NewTermuxSettings.isShowDrawerPkgUpdate(this);
+        boolean showCmd       = NewTermuxSettings.isShowDrawerCmdButtons(this);
+        boolean showAnyUtil   = showUtil || showPkgUpdate;
+        setVisible(R.id.drawer_util_row,       showAnyUtil);
+        setVisible(R.id.drawer_export_btn,     showUtil);
+        setVisible(R.id.drawer_script_btn,     showUtil);
+        setVisible(R.id.drawer_pkg_update_btn, showPkgUpdate);
+        setVisible(R.id.drawer_util_divider,   showAnyUtil && showCmd);
+        setVisible(R.id.drawer_cmd_container,  showCmd);
+        setVisible(R.id.drawer_cmd_controls,   showCmd);
     }
 
     private void setVisible(int id, boolean visible) {

@@ -17,6 +17,7 @@ public class NewTermuxSettings {
     public static final String KEY_SESSION_TABS             = "session_tabs";
     public static final String KEY_AUTOCORRECT               = "autocorrect_enabled";
     public static final String KEY_SHOW_DRAWER_EXPORT_SCRIPT = "show_drawer_export_script";
+    public static final String KEY_SHOW_DRAWER_PKG_UPDATE    = "show_drawer_pkg_update";
     public static final String KEY_SHOW_DRAWER_CMD_BUTTONS   = "show_drawer_cmd_buttons";
 
     private static SharedPreferences prefs(Context ctx) {
@@ -57,6 +58,9 @@ public class NewTermuxSettings {
     public static boolean isShowDrawerExportScript(Context ctx) {
         return prefs(ctx).getBoolean(KEY_SHOW_DRAWER_EXPORT_SCRIPT, true);
     }
+    public static boolean isShowDrawerPkgUpdate(Context ctx) {
+        return prefs(ctx).getBoolean(KEY_SHOW_DRAWER_PKG_UPDATE, true);
+    }
     public static boolean isShowDrawerCmdButtons(Context ctx) {
         return prefs(ctx).getBoolean(KEY_SHOW_DRAWER_CMD_BUTTONS, true);
     }
@@ -90,6 +94,7 @@ public class NewTermuxSettings {
             case KEY_SESSION_TABS:                 return isSessionTabsEnabled(ctx);
             case KEY_AUTOCORRECT:                  return isAutocorrectEnabled(ctx);
             case KEY_SHOW_DRAWER_EXPORT_SCRIPT:    return isShowDrawerExportScript(ctx);
+            case KEY_SHOW_DRAWER_PKG_UPDATE:       return isShowDrawerPkgUpdate(ctx);
             case KEY_SHOW_DRAWER_CMD_BUTTONS:      return isShowDrawerCmdButtons(ctx);
             default:                               return prefs(ctx).getBoolean(key, false);
         }

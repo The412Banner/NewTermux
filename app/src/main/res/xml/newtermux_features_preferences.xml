@@ -56,13 +56,18 @@
     <PreferenceCategory app:title="Drawer">
         <SwitchPreferenceCompat
             app:key="show_drawer_export_script"
-            app:title="Drawer Utility Buttons"
-            app:summary="Show Export Screen and Make Script buttons"
+            app:title="Export Screen &amp; Make Script"
+            app:summary="Show Export Screen and Make Script buttons in the drawer"
+            app:defaultValue="true" />
+        <SwitchPreferenceCompat
+            app:key="show_drawer_pkg_update"
+            app:title="Pkg Update Button"
+            app:summary="Show a button that runs pkg update &amp;&amp; pkg upgrade -y"
             app:defaultValue="true" />
         <SwitchPreferenceCompat
             app:key="show_drawer_cmd_buttons"
             app:title="Drawer Command Buttons"
-            app:summary="Show the 5 customisable command shortcut buttons"
+            app:summary="Show customisable command shortcut buttons (long-press to set, +/− to resize)"
             app:defaultValue="true" />
     </PreferenceCategory>
 
