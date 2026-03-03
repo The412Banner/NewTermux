@@ -42,7 +42,7 @@ public class SshManagerActivity extends AppCompatActivity {
         AppCompatActivityUtils.setNightMode(this, NightMode.getAppNightMode().getName(), true);
         setContentView(R.layout.activity_ssh_manager);
         AppCompatActivityUtils.setToolbar(this, com.termux.shared.R.id.toolbar);
-        AppCompatActivityUtils.setToolbarTitle(this, com.termux.shared.R.id.toolbar, "SSH Manager", false);
+        AppCompatActivityUtils.setToolbarTitle(this, com.termux.shared.R.id.toolbar, "SSH Manager", 0);
         AppCompatActivityUtils.setShowBackButtonInActionBar(this, true);
 
         mProfiles = SshProfileStore.load();
