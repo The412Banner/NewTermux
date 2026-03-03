@@ -457,53 +457,9 @@ public class SettingsActivity extends AppCompatActivity {
                     installZshPref.setEnabled(false);
                 } else {
                     installZshPref.setOnPreferenceClickListener(pref -> {
+                        NewTermuxSettings.setPendingCommand(context, "pkg install zsh\n");
                         Activity activity = getActivity();
-                        if (activity == null) return true;
-                        ProgressDialog progress = new ProgressDialog(activity);
-                        progress.setMessage("Installing zsh…");
-                        progress.setCancelable(false);
-                        progress.show();
-                        new Thread(() -> {
-                            try {
-                                ProcessBuilder pb = new ProcessBuilder(
-                                    com.termux.shared.termux.TermuxConstants.TERMUX_PREFIX_DIR_PATH + "/bin/apt",
-                                    "install", "-y", "zsh");
-                                pb.environment().put("PREFIX",
-                                    com.termux.shared.termux.TermuxConstants.TERMUX_PREFIX_DIR_PATH);
-                                pb.environment().put("HOME",
-                                    com.termux.shared.termux.TermuxConstants.TERMUX_HOME_DIR_PATH);
-                                pb.environment().put("TMPDIR",
-                                    com.termux.shared.termux.TermuxConstants.TERMUX_PREFIX_DIR_PATH + "/tmp");
-                                pb.environment().put("PATH",
-                                    com.termux.shared.termux.TermuxConstants.TERMUX_PREFIX_DIR_PATH + "/bin");
-                                pb.environment().put("DEBIAN_FRONTEND", "noninteractive");
-                                pb.redirectErrorStream(true);
-                                Process p = pb.start();
-                                p.waitFor();
-                            } catch (Exception ignored) {}
-                            activity.runOnUiThread(() -> {
-                                progress.dismiss();
-                                boolean nowInstalled = new java.io.File(
-                                    com.termux.shared.termux.TermuxConstants.TERMUX_PREFIX_DIR_PATH, "bin/zsh").exists();
-                                if (nowInstalled) {
-                                    installZshPref.setTitle("Zsh");
-                                    installZshPref.setSummary("✓ Installed");
-                                    installZshPref.setEnabled(false);
-                                    if (autosuggPref != null) {
-                                        autosuggPref.setEnabled(true);
-                                        autosuggPref.setSummary("Fish-like inline suggestions as you type");
-                                    }
-                                    if (syntaxHlPref != null) {
-                                        syntaxHlPref.setEnabled(true);
-                                        syntaxHlPref.setSummary("Color-code commands as you type — green=valid, red=not found");
-                                    }
-                                } else {
-                                    android.widget.Toast.makeText(context,
-                                        "Zsh installation failed. Try running: pkg install zsh",
-                                        android.widget.Toast.LENGTH_LONG).show();
-                                }
-                            });
-                        }).start();
+                        if (activity != null) activity.finish();
                         return true;
                     });
                 }

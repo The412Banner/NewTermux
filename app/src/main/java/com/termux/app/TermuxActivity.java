@@ -349,6 +349,17 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         applyFeatureSettings();
         if (mTermuxTerminalSessionActivityClient != null)
             mTermuxTerminalSessionActivityClient.checkForFontAndColors();
+
+        // Run any command injected by Settings (e.g. "pkg install zsh\n")
+        String pendingCmd = com.newtermux.features.NewTermuxSettings.getPendingCommand(this);
+        if (pendingCmd != null) {
+            com.newtermux.features.NewTermuxSettings.clearPendingCommand(this);
+            TerminalSession session = getCurrentSession();
+            if (session != null) {
+                byte[] bytes = pendingCmd.getBytes();
+                session.write(bytes, 0, bytes.length);
+            }
+        }
     }
 
     private void applyAccentColor() {

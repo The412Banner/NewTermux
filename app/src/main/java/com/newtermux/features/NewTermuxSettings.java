@@ -53,6 +53,17 @@ public class NewTermuxSettings {
         return prefs(ctx).getBoolean(KEY_SESSION_TABS, true);
     }
 
+    // Pending command — written by Settings, consumed and cleared by TermuxActivity.onResume()
+    public static String getPendingCommand(Context ctx) {
+        return prefs(ctx).getString("pending_command", null);
+    }
+    public static void setPendingCommand(Context ctx, String cmd) {
+        prefs(ctx).edit().putString("pending_command", cmd).apply();
+    }
+    public static void clearPendingCommand(Context ctx) {
+        prefs(ctx).edit().remove("pending_command").apply();
+    }
+
     // Generic setter for all boolean keys (used by preference listener)
     public static void set(Context ctx, String key, boolean value) {
         prefs(ctx).edit().putBoolean(key, value).apply();
