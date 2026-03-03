@@ -46,53 +46,33 @@
                 android:padding="12dp"
                 android:background="?attr/termuxActivityDrawerBackground">
 
-                <!-- Utility buttons row: Export · Script · Update (3 compact buttons) -->
+                <!-- Utility buttons: Export, Script, Update — same style as cmd buttons -->
                 <LinearLayout
                     android:id="@+id/drawer_util_row"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="4dp">
+                    android:orientation="vertical">
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/drawer_export_btn"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="2dp"
-                        android:text="Export"
-                        android:textSize="11sp"
-                        android:paddingTop="4dp"
-                        android:paddingBottom="4dp"
-                        app:minHeight="0dp"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+                        android:layout_marginBottom="6dp"
+                        android:text="Export Screen" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/drawer_script_btn"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="2dp"
-                        android:layout_marginEnd="2dp"
-                        android:text="Script"
-                        android:textSize="11sp"
-                        android:paddingTop="4dp"
-                        android:paddingBottom="4dp"
-                        app:minHeight="0dp"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+                        android:layout_marginBottom="6dp"
+                        android:text="Make Script" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/drawer_pkg_update_btn"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="2dp"
-                        android:text="Update"
-                        android:textSize="11sp"
-                        android:paddingTop="4dp"
-                        android:paddingBottom="4dp"
-                        app:minHeight="0dp"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+                        android:layout_marginBottom="4dp"
+                        android:text="Pkg Update" />
 
                 </LinearLayout>
 
