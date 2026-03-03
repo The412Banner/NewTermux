@@ -35,10 +35,6 @@
     </PreferenceCategory>
 
     <PreferenceCategory app:title="Shell">
-        <SwitchPreferenceCompat app:key="oh_my_zsh"
-            app:title="Oh My Zsh"
-            app:summary="Auto-install Oh My Zsh and use zsh as default shell"
-            app:defaultValue="true" />
         <SwitchPreferenceCompat app:key="zsh_autosuggestions"
             app:title="zsh-autosuggestions"
             app:summary="Fish-like inline suggestions (requires Oh My Zsh)"

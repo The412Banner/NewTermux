@@ -493,8 +493,8 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         // Now that the service is connected and sessions exist, populate the session chips.
         updateSessionTabs();
 
-        // Ensure Oh My Zsh + zsh shell are set up for existing installs that skipped first-run.
-        new Thread(() -> TermuxInstaller.installOhMyZsh(this)).start();
+        // Ensure zsh plugins + shell are set up for existing installs that skipped first-run.
+        new Thread(() -> TermuxInstaller.installZshPlugins(this)).start();
 
         // Request storage permission on every launch; no-op if already granted.
         requestStoragePermission(false);
