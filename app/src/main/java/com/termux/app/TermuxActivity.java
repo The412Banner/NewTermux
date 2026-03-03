@@ -78,7 +78,17 @@ import com.newtermux.features.NewTermuxTheme;
 import com.newtermux.features.RootToggleManager;
 import com.newtermux.features.SpeechInputManager;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 
 /**
  * A terminal emulator activity.
@@ -203,6 +213,11 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
     private com.google.android.material.chip.ChipGroup mSessionChipGroup;
     private static final int REQUEST_RECORD_AUDIO = 201;
 
+    // SAF launchers for Export Screen and Make Script
+    private ActivityResultLauncher<String> mScreenExportSaver;
+    private ActivityResultLauncher<String> mScriptSaver;
+    private final List<String> mPendingScriptLines = new ArrayList<>();
+
     private static final int CONTEXT_MENU_SELECT_URL_ID = 0;
     private static final int CONTEXT_MENU_SHARE_TRANSCRIPT_ID = 1;
     private static final int CONTEXT_MENU_SHARE_SELECTED_TEXT = 10;
@@ -272,7 +287,45 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 
         setTerminalToolbarView(savedInstanceState);
 
+        mScreenExportSaver = registerForActivityResult(
+            new ActivityResultContracts.CreateDocument("text/plain"),
+            uri -> {
+                if (uri == null) return;
+                TerminalSession session = getCurrentSession();
+                if (session == null) return;
+                String text = session.getEmulator().getScreen().getTranscriptText();
+                new Thread(() -> {
+                    try (OutputStream os = getContentResolver().openOutputStream(uri)) {
+                        if (os != null) os.write(text.getBytes());
+                        runOnUiThread(() -> Toast.makeText(this, "Screen exported", Toast.LENGTH_SHORT).show());
+                    } catch (Exception e) {
+                        runOnUiThread(() -> Toast.makeText(this, "Export failed: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                    }
+                }).start();
+            });
+
+        mScriptSaver = registerForActivityResult(
+            new ActivityResultContracts.CreateDocument("text/x-shellscript"),
+            uri -> {
+                if (uri == null || mPendingScriptLines.isEmpty()) return;
+                List<String> lines = new ArrayList<>(mPendingScriptLines);
+                mPendingScriptLines.clear();
+                new Thread(() -> {
+                    try (OutputStream os = getContentResolver().openOutputStream(uri)) {
+                        if (os == null) return;
+                        os.write("#!/bin/zsh\n".getBytes());
+                        for (String line : lines) {
+                            os.write((line + "\n").getBytes());
+                        }
+                        runOnUiThread(() -> Toast.makeText(this, "Script saved", Toast.LENGTH_SHORT).show());
+                    } catch (Exception e) {
+                        runOnUiThread(() -> Toast.makeText(this, "Save failed: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                    }
+                }).start();
+            });
+
         setupDrawerCommandButtons();
+        setupDrawerUtilityButtons();
 
         setupNewTermuxFeatures();
 
@@ -1014,6 +1067,84 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 
 
 
+
+    private void setupDrawerUtilityButtons() {
+        android.widget.Button exportBtn = findViewById(R.id.drawer_export_btn);
+        if (exportBtn != null) {
+            exportBtn.setOnClickListener(v -> {
+                getDrawer().closeDrawers();
+                mScreenExportSaver.launch("terminal-screen.txt");
+            });
+        }
+
+        android.widget.Button scriptBtn = findViewById(R.id.drawer_script_btn);
+        if (scriptBtn != null) {
+            scriptBtn.setOnClickListener(v -> {
+                getDrawer().closeDrawers();
+                showMakeScriptDialog();
+            });
+        }
+    }
+
+    private void showMakeScriptDialog() {
+        new Thread(() -> {
+            // Try zsh_history first, fall back to bash_history
+            File histFile = new File(TermuxConstants.TERMUX_HOME_DIR_PATH, ".zsh_history");
+            if (!histFile.exists()) histFile = new File(TermuxConstants.TERMUX_HOME_DIR_PATH, ".bash_history");
+            if (!histFile.exists()) {
+                runOnUiThread(() -> Toast.makeText(this, "No history file found", Toast.LENGTH_SHORT).show());
+                return;
+            }
+
+            // Parse history: deduplicate, newest-first, cap at 100
+            LinkedHashMap<String, String> seen = new LinkedHashMap<>();
+            try (BufferedReader br = new BufferedReader(new FileReader(histFile))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    // Strip zsh extended format: ": timestamp:elapsed;command"
+                    if (line.startsWith(": ") && line.contains(";")) {
+                        line = line.substring(line.indexOf(';') + 1);
+                    }
+                    line = line.trim();
+                    if (!line.isEmpty()) seen.put(line, line);
+                }
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(this, "Failed to read history", Toast.LENGTH_SHORT).show());
+                return;
+            }
+
+            // Reverse so newest entries appear first, cap at 100
+            List<String> entries = new ArrayList<>(seen.values());
+            java.util.Collections.reverse(entries);
+            if (entries.size() > 100) entries = entries.subList(0, 100);
+
+            final List<String> finalEntries = entries;
+            final boolean[] checked = new boolean[finalEntries.size()];
+
+            runOnUiThread(() -> {
+                CharSequence[] items = finalEntries.toArray(new CharSequence[0]);
+                new AlertDialog.Builder(this)
+                    .setTitle("Make Script — select commands")
+                    .setMultiChoiceItems(items, checked, (d, which, isChecked) -> checked[which] = isChecked)
+                    .setPositiveButton("Save Script", (d, w) -> {
+                        // Collect in chronological order (reverse of display order)
+                        List<String> selected = new ArrayList<>();
+                        for (int i = checked.length - 1; i >= 0; i--) {
+                            if (checked[i]) selected.add(finalEntries.get(i));
+                        }
+                        if (selected.isEmpty()) {
+                            Toast.makeText(this, "No commands selected", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        mPendingScriptLines.clear();
+                        mPendingScriptLines.addAll(selected);
+                        mScriptSaver.launch("script.sh");
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+            });
+        }).start();
+    }
 
     @SuppressLint("RtlHardcoded")
     @Override

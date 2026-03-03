@@ -47,6 +47,26 @@
                 android:background="?attr/termuxActivityDrawerBackground">
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/drawer_export_btn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:text="Export Screen" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/drawer_script_btn"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:text="Make Script" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?android:attr/listDivider"
+                    android:layout_marginBottom="8dp" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/drawer_cmd_btn_1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
