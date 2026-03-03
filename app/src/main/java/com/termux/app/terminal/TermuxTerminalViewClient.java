@@ -365,6 +365,30 @@ public class TermuxTerminalViewClient extends TermuxTerminalViewClientBase {
 
     @Override
     public boolean onLongPress(MotionEvent event) {
+        // Detect URL at the long-pressed position and show Open/Copy dialog
+        try {
+            int[] columnAndRow = mActivity.getTerminalView().getColumnAndRow(event, true);
+            String word = mActivity.getCurrentSession().getEmulator().getScreen()
+                .getWordAtLocation(columnAndRow[0], columnAndRow[1]);
+            if (word != null && !word.isEmpty()) {
+                LinkedHashSet<CharSequence> urlSet = TermuxUrlUtils.extractUrls(word);
+                if (!urlSet.isEmpty()) {
+                    String url = (String) urlSet.iterator().next();
+                    new android.app.AlertDialog.Builder(mActivity)
+                        .setTitle(url)
+                        .setItems(new String[]{"Open in browser", "Copy to clipboard"}, (d, which) -> {
+                            if (which == 0) {
+                                ShareUtils.openUrl(mActivity, url);
+                            } else {
+                                ShareUtils.copyTextToClipboard(mActivity, url,
+                                    mActivity.getString(R.string.msg_select_url_copied_to_clipboard));
+                            }
+                        })
+                        .show();
+                    return true;
+                }
+            }
+        } catch (Exception ignored) {}
         return false;
     }
 
