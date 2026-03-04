@@ -78,6 +78,23 @@
             android:textSize="12sp"
             android:textStyle="bold" />
 
+        <!-- Split screen toggle button -->
+        <TextView
+            android:id="@+id/btn_split_screen"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/bg_package_button"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:text="Split"
+            android:textColor="@color/nt_on_surface"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
         <!-- Speech-to-Text button -->
         <ImageButton
             android:id="@+id/btn_stt"

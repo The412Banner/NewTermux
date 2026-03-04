@@ -26,15 +26,41 @@
             android:layout_above="@+id/terminal_toolbar_view_pager"
             android:layout_height="match_parent">
 
-            <com.termux.view.TerminalView
-                android:id="@+id/terminal_view"
+            <LinearLayout
+                android:id="@+id/terminal_panes_container"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:defaultFocusHighlightEnabled="false"
-                android:focusableInTouchMode="true"
-                android:scrollbarThumbVertical="@drawable/terminal_scroll_shape"
-                android:scrollbars="vertical"
-                tools:ignore="UnusedAttribute" />
+                android:orientation="vertical">
+
+                <com.termux.view.TerminalView
+                    android:id="@+id/terminal_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:defaultFocusHighlightEnabled="false"
+                    android:focusableInTouchMode="true"
+                    android:scrollbarThumbVertical="@drawable/terminal_scroll_shape"
+                    android:scrollbars="vertical"
+                    tools:ignore="UnusedAttribute" />
+
+                <View
+                    android:id="@+id/split_divider"
+                    android:layout_width="match_parent"
+                    android:layout_height="3dp"
+                    android:background="@color/nt_divider"
+                    android:visibility="gone" />
+
+                <com.termux.view.TerminalView
+                    android:id="@+id/terminal_view_2"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:defaultFocusHighlightEnabled="false"
+                    android:focusableInTouchMode="true"
+                    android:scrollbarThumbVertical="@drawable/terminal_scroll_shape"
+                    android:scrollbars="vertical"
+                    android:visibility="gone"
+                    tools:ignore="UnusedAttribute" />
+
+            </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/left_drawer"

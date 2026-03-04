@@ -63,6 +63,9 @@ import com.termux.terminal.TerminalSession;
 import com.termux.terminal.TerminalSessionClient;
 import com.termux.view.TerminalView;
 import com.termux.view.TerminalViewClient;
+import com.termux.shared.termux.terminal.TermuxTerminalViewClientBase;
+import com.termux.shared.view.KeyboardUtils;
+import android.view.MotionEvent;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -116,6 +119,10 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
      * The {@link TerminalView} shown in  {@link TermuxActivity} that displays the terminal.
      */
     TerminalView mTerminalView;
+
+    /** Second terminal pane for split-screen mode. */
+    TerminalView mTerminalView2;
+    private boolean mSplitEnabled = false;
 
     /**
      *  The {@link TerminalViewClient} interface implementation to allow for communication between
@@ -643,6 +650,9 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         mTerminalView = findViewById(R.id.terminal_view);
         mTerminalView.setTerminalViewClient(mTermuxTerminalViewClient);
 
+        mTerminalView2 = findViewById(R.id.terminal_view_2);
+        mTerminalView2.setTerminalViewClient(new SplitPaneViewClient());
+
         if (mTermuxTerminalViewClient != null)
             mTermuxTerminalViewClient.onCreate();
 
@@ -794,6 +804,11 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
                     mTermuxTerminalSessionActivityClient.addNewSession(false, null);
                 }
             });
+        }
+
+        TextView btnSplit = findViewById(R.id.btn_split_screen);
+        if (btnSplit != null) {
+            btnSplit.setOnClickListener(v -> toggleSplitScreen());
         }
 
         // Session tabs (ChipGroup)
@@ -1513,6 +1528,106 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 
     public TerminalView getTerminalView() {
         return mTerminalView;
+    }
+
+    private void toggleSplitScreen() {
+        LinearLayout container = findViewById(R.id.terminal_panes_container);
+        View divider = findViewById(R.id.split_divider);
+        if (container == null || divider == null || mTerminalView2 == null) return;
+
+        TextView btnSplit = findViewById(R.id.btn_split_screen);
+
+        if (!mSplitEnabled) {
+            // Create a new session for the second pane
+            TermuxService service = getTermuxService();
+            if (service == null) return;
+            String cwd = getCurrentSession() != null
+                ? getCurrentSession().getCwd()
+                : getProperties().getDefaultWorkingDirectory();
+            com.termux.shared.termux.shell.command.runner.terminal.TermuxSession ts =
+                service.createTermuxSession(null, null, null, cwd, false, "Split");
+            if (ts == null) return;
+            mTerminalView2.attachSession(ts.getTerminalSession());
+
+            // Resize primary to half
+            LinearLayout.LayoutParams lp1 =
+                (LinearLayout.LayoutParams) mTerminalView.getLayoutParams();
+            lp1.height = 0;
+            lp1.weight = 1f;
+            mTerminalView.setLayoutParams(lp1);
+
+            // Show divider and second pane
+            divider.setVisibility(View.VISIBLE);
+            LinearLayout.LayoutParams lp2 =
+                (LinearLayout.LayoutParams) mTerminalView2.getLayoutParams();
+            lp2.height = 0;
+            lp2.weight = 1f;
+            mTerminalView2.setLayoutParams(lp2);
+            mTerminalView2.setVisibility(View.VISIBLE);
+            mTerminalView2.requestFocus();
+
+            mSplitEnabled = true;
+            if (btnSplit != null) {
+                btnSplit.setTextColor(
+                    com.newtermux.features.NewTermuxTheme.getAccentColor(this));
+            }
+        } else {
+            // Restore primary to full size
+            LinearLayout.LayoutParams lp1 =
+                (LinearLayout.LayoutParams) mTerminalView.getLayoutParams();
+            lp1.height = LinearLayout.LayoutParams.MATCH_PARENT;
+            lp1.weight = 0f;
+            mTerminalView.setLayoutParams(lp1);
+
+            divider.setVisibility(View.GONE);
+            LinearLayout.LayoutParams lp2 =
+                (LinearLayout.LayoutParams) mTerminalView2.getLayoutParams();
+            lp2.height = 0;
+            lp2.weight = 0f;
+            mTerminalView2.setLayoutParams(lp2);
+            mTerminalView2.setVisibility(View.GONE);
+            mTerminalView.requestFocus();
+
+            mSplitEnabled = false;
+            if (btnSplit != null) {
+                btnSplit.setTextColor(
+                    getResources().getColor(com.termux.R.color.nt_on_surface, getTheme()));
+            }
+        }
+    }
+
+    /** Minimal client for the second terminal pane in split-screen mode. */
+    private class SplitPaneViewClient extends TermuxTerminalViewClientBase {
+        @Override
+        public void onSingleTapUp(MotionEvent e) {
+            if (mTerminalView2 != null) mTerminalView2.requestFocus();
+            KeyboardUtils.showSoftKeyboard(TermuxActivity.this, mTerminalView2);
+        }
+
+        @Override
+        public boolean shouldBackButtonBeMappedToEscape() { return true; }
+
+        @Override
+        public boolean shouldEnforceCharBasedInput() {
+            return mTermuxTerminalViewClient != null
+                && mTermuxTerminalViewClient.shouldEnforceCharBasedInput();
+        }
+
+        @Override
+        public boolean isTerminalViewSelected() {
+            return mTerminalView2 != null && mTerminalView2.hasFocus();
+        }
+
+        @Override
+        public float onScale(float scale) { return 1.0f; }
+
+        @Override public void logError(String tag, String message) {}
+        @Override public void logWarn(String tag, String message) {}
+        @Override public void logInfo(String tag, String message) {}
+        @Override public void logDebug(String tag, String message) {}
+        @Override public void logVerbose(String tag, String message) {}
+        @Override public void logStackTraceWithMessage(String tag, String message, Exception e) {}
+        @Override public void logStackTrace(String tag, Exception e) {}
     }
 
     public TermuxTerminalViewClient getTermuxTerminalViewClient() {
