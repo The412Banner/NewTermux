@@ -1078,6 +1078,78 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
             android.content.res.ColorStateList.valueOf(accentColor);
 
         int marginBtm = Math.round(6 * getResources().getDisplayMetrics().density);
+
+        // --- Utility buttons (always at top, unless toggled off in Settings) ---
+        boolean showExportScript = NewTermuxSettings.isShowDrawerExportScript(this);
+        boolean showPkgUpdate    = NewTermuxSettings.isShowDrawerPkgUpdate(this);
+        boolean anyUtility = showExportScript || showPkgUpdate;
+
+        if (showExportScript) {
+            MaterialButton exportBtn = new MaterialButton(this,
+                null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            lp.bottomMargin = marginBtm;
+            exportBtn.setLayoutParams(lp);
+            exportBtn.setStrokeColor(accentCsl);
+            exportBtn.setTextColor(accentColor);
+            exportBtn.setText("Export Screen");
+            exportBtn.setOnClickListener(v -> {
+                getDrawer().closeDrawers();
+                mScreenExportSaver.launch("screen.txt");
+            });
+            container.addView(exportBtn);
+
+            MaterialButton scriptBtn = new MaterialButton(this,
+                null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
+            LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            lp2.bottomMargin = marginBtm;
+            scriptBtn.setLayoutParams(lp2);
+            scriptBtn.setStrokeColor(accentCsl);
+            scriptBtn.setTextColor(accentColor);
+            scriptBtn.setText("Make Script");
+            scriptBtn.setOnClickListener(v -> {
+                getDrawer().closeDrawers();
+                showMakeScriptDialog();
+            });
+            container.addView(scriptBtn);
+        }
+
+        if (showPkgUpdate) {
+            MaterialButton pkgBtn = new MaterialButton(this,
+                null, com.google.android.material.R.attr.materialButtonOutlinedStyle);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            lp.bottomMargin = marginBtm;
+            pkgBtn.setLayoutParams(lp);
+            pkgBtn.setStrokeColor(accentCsl);
+            pkgBtn.setTextColor(accentColor);
+            pkgBtn.setText("Pkg Update");
+            pkgBtn.setOnClickListener(v -> {
+                getDrawer().closeDrawers();
+                TerminalSession s = getCurrentSession();
+                if (s != null) {
+                    String cmd = "pkg update -y\n";
+                    s.write(cmd.getBytes(), 0, cmd.length());
+                }
+            });
+            container.addView(pkgBtn);
+        }
+
+        // Divider between utility and custom buttons
+        if (anyUtility) {
+            android.view.View divider = new android.view.View(this);
+            LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, Math.round(1 * getResources().getDisplayMetrics().density));
+            dlp.topMargin = Math.round(2 * getResources().getDisplayMetrics().density);
+            dlp.bottomMargin = marginBtm;
+            divider.setLayoutParams(dlp);
+            divider.setBackgroundColor((accentColor & 0x00FFFFFF) | 0x55000000); // 33% alpha accent
+            container.addView(divider);
+        }
+
+        // --- Custom command buttons ---
         for (int i = 0; i < count; i++) {
             final int idx = i;
             String defName = idx < DRAWER_BTN_DEFAULT_NAMES.length ? DRAWER_BTN_DEFAULT_NAMES[idx] : "";
