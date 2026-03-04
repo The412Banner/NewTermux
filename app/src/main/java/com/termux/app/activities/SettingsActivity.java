@@ -429,7 +429,6 @@ public class SettingsActivity extends AppCompatActivity {
                 NewTermuxSettings.KEY_STARTUP_SCRIPT_ENABLED,
                 NewTermuxSettings.KEY_URL_DETECTION_ENABLED,
                 NewTermuxSettings.KEY_SESSION_RENAME_ENABLED,
-                NewTermuxSettings.KEY_TEXT_EXPANSION_ENABLED,
             };
             for (String key : boolKeys) {
                 SwitchPreferenceCompat pref = findPreference(key);
@@ -507,14 +506,6 @@ public class SettingsActivity extends AppCompatActivity {
                 });
             }
 
-            // --- Manage Text Expansions ---
-            Preference manageExpPref = findPreference("manage_text_expansions");
-            if (manageExpPref != null) {
-                manageExpPref.setOnPreferenceClickListener(pref -> {
-                    showManageExpansionsDialog(context);
-                    return true;
-                });
-            }
         }
 
         private void showStartupScriptEditor(Context context) {
@@ -560,6 +551,42 @@ public class SettingsActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+        }
+
+        private void showRestartWarning() {
+            Activity activity = getActivity();
+            if (activity == null) return;
+            new AlertDialog.Builder(activity)
+                .setTitle("Restart Required")
+                .setMessage("Start a new terminal session for this change to take effect.")
+                .setPositiveButton("OK", null)
+                .show();
+        }
+    }
+
+    public static class TextExpansionPreferencesFragment extends PreferenceFragmentCompat {
+        @Override
+        public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
+            setPreferencesFromResource(R.xml.newtermux_text_expansion_preferences, rootKey);
+            Context context = getContext();
+            if (context == null) return;
+
+            SwitchPreferenceCompat togglePref = findPreference(NewTermuxSettings.KEY_TEXT_EXPANSION_ENABLED);
+            if (togglePref != null) {
+                togglePref.setChecked(NewTermuxSettings.isTextExpansionEnabled(context));
+                togglePref.setOnPreferenceChangeListener((pref, newValue) -> {
+                    NewTermuxSettings.set(context, NewTermuxSettings.KEY_TEXT_EXPANSION_ENABLED, (Boolean) newValue);
+                    return true;
+                });
+            }
+
+            Preference manageExpPref = findPreference("manage_text_expansions");
+            if (manageExpPref != null) {
+                manageExpPref.setOnPreferenceClickListener(pref -> {
+                    showManageExpansionsDialog(context);
+                    return true;
+                });
+            }
         }
 
         private void showManageExpansionsDialog(Context context) {
@@ -696,16 +723,6 @@ public class SettingsActivity extends AppCompatActivity {
                     onSave.run();
                 })
                 .setNegativeButton("Cancel", null)
-                .show();
-        }
-
-        private void showRestartWarning() {
-            Activity activity = getActivity();
-            if (activity == null) return;
-            new AlertDialog.Builder(activity)
-                .setTitle("Restart Required")
-                .setMessage("Start a new terminal session for this change to take effect.")
-                .setPositiveButton("OK", null)
                 .show();
         }
     }

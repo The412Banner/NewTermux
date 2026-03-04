@@ -31,6 +31,12 @@
         app:fragment="com.termux.app.activities.SettingsActivity$FeaturesPreferencesFragment"/>
 
     <Preference
+        app:key="text_expansion"
+        app:title="Text Expansion"
+        app:summary="Auto-expand short triggers to full commands"
+        app:fragment="com.termux.app.activities.SettingsActivity$TextExpansionPreferencesFragment"/>
+
+    <Preference
         app:key="termux"
         app:title="@string/termux_preferences_title"
         app:summary="@string/termux_preferences_summary"

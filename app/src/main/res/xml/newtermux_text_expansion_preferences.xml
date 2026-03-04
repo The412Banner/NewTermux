@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <SwitchPreferenceCompat
+        app:key="text_expansion_enabled"
+        app:title="Text Expansion"
+        app:summary="Type a trigger like ;ll and hit Space/Tab to expand it"
+        app:defaultValue="false" />
+
+    <Preference
+        app:key="manage_text_expansions"
+        app:title="Manage Expansions"
+        app:summary="Add, edit or delete expansion triggers"
+        app:persistent="false"
+        app:dependency="text_expansion_enabled" />
+
+</PreferenceScreen>
