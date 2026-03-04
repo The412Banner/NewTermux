@@ -401,10 +401,9 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         }
         if (!currentDrawerMode) {
             ViewPager vp = getTerminalToolbarViewPager();
-            if (vp != null && mPreferences != null) {
-                boolean show = com.newtermux.features.NewTermuxSettings.isExtraKeysVisible(this)
-                    && mPreferences.shouldShowTerminalToolbar();
-                vp.setVisibility(show ? View.VISIBLE : View.GONE);
+            if (vp != null) {
+                vp.setVisibility(com.newtermux.features.NewTermuxSettings.isExtraKeysVisible(this)
+                    ? View.VISIBLE : View.GONE);
             }
         }
 
@@ -698,11 +697,19 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
                 rightEkv.setButtonTextAllCaps(getProperties().shouldExtraKeysTextBeAllCaps());
                 mExtraKeysView = rightEkv;
                 rightEkv.reload(mTermuxTerminalExtraKeys.getExtraKeysInfo(), mTerminalToolbarDefaultHeight);
+                // GridLayout buttons use height=0 + FILL — the view needs a fixed height to expand into
+                if (mTermuxTerminalExtraKeys.getExtraKeysInfo() != null) {
+                    int rowCount = mTermuxTerminalExtraKeys.getExtraKeysInfo().getMatrix().length;
+                    int totalHeight = Math.round(mTerminalToolbarDefaultHeight * rowCount
+                        * mProperties.getTerminalToolbarHeightScaleFactor());
+                    ViewGroup.LayoutParams ekParams = rightEkv.getLayoutParams();
+                    ekParams.height = totalHeight;
+                    rightEkv.setLayoutParams(ekParams);
+                }
             }
             // ViewPager stays GONE; no adapter set in drawer mode
         } else {
-            if (com.newtermux.features.NewTermuxSettings.isExtraKeysVisible(this)
-                    && mPreferences.shouldShowTerminalToolbar()) {
+            if (com.newtermux.features.NewTermuxSettings.isExtraKeysVisible(this)) {
                 terminalToolbarViewPager.setVisibility(View.VISIBLE);
             }
             setTerminalToolbarHeight();
