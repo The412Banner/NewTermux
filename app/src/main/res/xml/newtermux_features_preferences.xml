@@ -95,6 +95,20 @@
             app:defaultValue="true" />
     </PreferenceCategory>
 
+    <PreferenceCategory app:title="Text Expansion">
+        <SwitchPreferenceCompat
+            app:key="text_expansion_enabled"
+            app:title="Text Expansion"
+            app:summary="Type a trigger like ;ll and hit Space/Tab to expand it"
+            app:defaultValue="false" />
+        <Preference
+            app:key="manage_text_expansions"
+            app:title="Manage Expansions"
+            app:summary="Add, edit or delete expansion triggers"
+            app:persistent="false"
+            app:dependency="text_expansion_enabled" />
+    </PreferenceCategory>
+
     <PreferenceCategory app:title="Permissions">
         <Preference
             app:key="grant_storage_permission"

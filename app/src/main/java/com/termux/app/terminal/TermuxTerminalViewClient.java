@@ -72,6 +72,7 @@ public class TermuxTerminalViewClient extends TermuxTerminalViewClientBase {
     private List<KeyboardShortcut> mSessionShortcuts;
 
     private final StringBuilder mCurrentCommand = new StringBuilder();
+    private final StringBuilder mExpansionBuffer = new StringBuilder();
 
     private static final String LOG_TAG = "TermuxTerminalViewClient";
 
@@ -245,6 +246,8 @@ public class TermuxTerminalViewClient extends TermuxTerminalViewClientBase {
             mCurrentCommand.setLength(0);
             mActivity.checkForAutocorrect(null);
         } else if (keyCode == KeyEvent.KEYCODE_DEL) {
+            if (mExpansionBuffer.length() > 0)
+                mExpansionBuffer.deleteCharAt(mExpansionBuffer.length() - 1);
             if (mCurrentCommand.length() > 0) {
                 mCurrentCommand.deleteCharAt(mCurrentCommand.length() - 1);
                 mActivity.checkForAutocorrect(mCurrentCommand.toString());
@@ -398,13 +401,34 @@ public class TermuxTerminalViewClient extends TermuxTerminalViewClientBase {
     @Override
     public boolean onCodePoint(final int codePoint, boolean ctrlDown, TerminalSession session) {
         if (!ctrlDown && !mVirtualControlKeyDown && !mVirtualFnKeyDown) {
-            if (Character.isLetterOrDigit(codePoint) || codePoint == '-' || codePoint == '_') {
-                mCurrentCommand.append((char) codePoint);
-            } else if (Character.isWhitespace(codePoint)) {
+            if (Character.isWhitespace(codePoint)) {
+                // Text expansion: fire on Space or Tab only (not Enter/newline)
+                if ((codePoint == ' ' || codePoint == '\t')
+                        && mExpansionBuffer.length() > 0
+                        && com.newtermux.features.NewTermuxSettings.isTextExpansionEnabled(mActivity)) {
+                    String trigger = mExpansionBuffer.toString();
+                    String expansion = com.newtermux.features.TextExpansionStore.findExpansion(mActivity, trigger);
+                    if (expansion != null) {
+                        mExpansionBuffer.setLength(0);
+                        mCurrentCommand.setLength(0);
+                        StringBuilder out = new StringBuilder();
+                        for (int i = 0; i < trigger.length(); i++) out.append('\177'); // DEL
+                        out.append(expansion).append((char) codePoint);
+                        byte[] bytes = out.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                        session.write(bytes, 0, bytes.length);
+                        return true; // consume — don't send codePoint again
+                    }
+                }
+                mExpansionBuffer.setLength(0);
                 if (mCurrentCommand.length() > 0) {
                     mActivity.checkForAutocorrect(mCurrentCommand.toString());
                 }
                 mCurrentCommand.setLength(0);
+            } else if (codePoint >= 32) { // printable character
+                mExpansionBuffer.append((char) codePoint);
+                if (Character.isLetterOrDigit(codePoint) || codePoint == '-' || codePoint == '_') {
+                    mCurrentCommand.append((char) codePoint);
+                }
             }
         }
         if (mVirtualFnKeyDown) {

@@ -429,6 +429,7 @@ public class SettingsActivity extends AppCompatActivity {
                 NewTermuxSettings.KEY_STARTUP_SCRIPT_ENABLED,
                 NewTermuxSettings.KEY_URL_DETECTION_ENABLED,
                 NewTermuxSettings.KEY_SESSION_RENAME_ENABLED,
+                NewTermuxSettings.KEY_TEXT_EXPANSION_ENABLED,
             };
             for (String key : boolKeys) {
                 SwitchPreferenceCompat pref = findPreference(key);
@@ -505,6 +506,15 @@ public class SettingsActivity extends AppCompatActivity {
                     return true;
                 });
             }
+
+            // --- Manage Text Expansions ---
+            Preference manageExpPref = findPreference("manage_text_expansions");
+            if (manageExpPref != null) {
+                manageExpPref.setOnPreferenceClickListener(pref -> {
+                    showManageExpansionsDialog(context);
+                    return true;
+                });
+            }
         }
 
         private void showStartupScriptEditor(Context context) {
@@ -547,6 +557,143 @@ public class SettingsActivity extends AppCompatActivity {
                     } catch (java.io.IOException e) {
                         android.widget.Toast.makeText(context, "Failed to save: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
                     }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+        }
+
+        private void showManageExpansionsDialog(Context context) {
+            int dp = (int) context.getResources().getDisplayMetrics().density;
+
+            android.widget.LinearLayout listContainer = new android.widget.LinearLayout(context);
+            listContainer.setOrientation(android.widget.LinearLayout.VERTICAL);
+            listContainer.setPadding(0, 0, 0, 0);
+
+            android.widget.ScrollView scrollView = new android.widget.ScrollView(context);
+            scrollView.addView(listContainer);
+            android.widget.LinearLayout.LayoutParams scrollParams =
+                new android.widget.LinearLayout.LayoutParams(
+                    android.widget.LinearLayout.LayoutParams.MATCH_PARENT, 300 * dp);
+            scrollView.setLayoutParams(scrollParams);
+
+            android.widget.Button addNewBtn = new android.widget.Button(context);
+            addNewBtn.setText("Add New");
+
+            android.widget.LinearLayout container = new android.widget.LinearLayout(context);
+            container.setOrientation(android.widget.LinearLayout.VERTICAL);
+            container.setPadding(12 * dp, 8 * dp, 12 * dp, 8 * dp);
+            container.addView(scrollView);
+            container.addView(addNewBtn);
+
+            Runnable[] refreshRef = new Runnable[1];
+            refreshRef[0] = () -> {
+                listContainer.removeAllViews();
+                java.util.List<com.newtermux.features.TextExpansionStore.TextExpansion> expansions =
+                    com.newtermux.features.TextExpansionStore.load(context);
+
+                if (expansions.isEmpty()) {
+                    android.widget.TextView empty = new android.widget.TextView(context);
+                    empty.setText("No expansions yet. Tap 'Add New' to create one.");
+                    empty.setPadding(0, 8 * dp, 0, 8 * dp);
+                    listContainer.addView(empty);
+                    return;
+                }
+
+                for (int i = 0; i < expansions.size(); i++) {
+                    final int idx = i;
+                    com.newtermux.features.TextExpansionStore.TextExpansion exp = expansions.get(idx);
+
+                    android.widget.LinearLayout row = new android.widget.LinearLayout(context);
+                    row.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+                    row.setPadding(0, 4 * dp, 0, 4 * dp);
+
+                    android.widget.TextView label = new android.widget.TextView(context);
+                    label.setText(exp.trigger + "  →  " + exp.expansion);
+                    label.setTypeface(android.graphics.Typeface.MONOSPACE);
+                    label.setLayoutParams(new android.widget.LinearLayout.LayoutParams(
+                        0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+                    android.widget.Button deleteBtn = new android.widget.Button(context);
+                    deleteBtn.setText("Delete");
+
+                    row.addView(label);
+                    row.addView(deleteBtn);
+                    listContainer.addView(row);
+
+                    row.setOnClickListener(v ->
+                        showEditExpansionDialog(context, idx, refreshRef[0]));
+
+                    deleteBtn.setOnClickListener(v -> {
+                        expansions.remove(idx);
+                        com.newtermux.features.TextExpansionStore.save(context, expansions);
+                        refreshRef[0].run();
+                    });
+                }
+            };
+
+            refreshRef[0].run();
+
+            addNewBtn.setOnClickListener(v ->
+                showEditExpansionDialog(context, -1, refreshRef[0]));
+
+            new AlertDialog.Builder(requireContext())
+                .setTitle("Text Expansions")
+                .setView(container)
+                .setPositiveButton("Close", null)
+                .show();
+        }
+
+        private void showEditExpansionDialog(Context context, int editIdx, Runnable onSave) {
+            int dp = (int) context.getResources().getDisplayMetrics().density;
+
+            java.util.List<com.newtermux.features.TextExpansionStore.TextExpansion> current =
+                com.newtermux.features.TextExpansionStore.load(context);
+            String initTrigger = (editIdx >= 0 && editIdx < current.size()) ? current.get(editIdx).trigger : "";
+            String initExpansion = (editIdx >= 0 && editIdx < current.size()) ? current.get(editIdx).expansion : "";
+
+            android.widget.EditText triggerEdit = new android.widget.EditText(context);
+            triggerEdit.setHint("Trigger (e.g. ;ll)");
+            triggerEdit.setText(initTrigger);
+            triggerEdit.setInputType(android.text.InputType.TYPE_CLASS_TEXT
+                | android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+
+            android.widget.EditText expansionEdit = new android.widget.EditText(context);
+            expansionEdit.setHint("Expansion (e.g. ls -la)");
+            expansionEdit.setText(initExpansion);
+            expansionEdit.setInputType(android.text.InputType.TYPE_CLASS_TEXT
+                | android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+
+            android.widget.LinearLayout layout = new android.widget.LinearLayout(context);
+            layout.setOrientation(android.widget.LinearLayout.VERTICAL);
+            layout.setPadding(12 * dp, 8 * dp, 12 * dp, 8 * dp);
+            layout.addView(triggerEdit);
+            layout.addView(expansionEdit);
+
+            new AlertDialog.Builder(requireContext())
+                .setTitle(editIdx >= 0 ? "Edit Expansion" : "Add Expansion")
+                .setView(layout)
+                .setPositiveButton("Save", (d, w) -> {
+                    String trigger = triggerEdit.getText().toString().trim();
+                    String expansion = expansionEdit.getText().toString();
+                    if (trigger.isEmpty()) {
+                        android.widget.Toast.makeText(context, "Trigger cannot be empty",
+                            android.widget.Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    java.util.List<com.newtermux.features.TextExpansionStore.TextExpansion> list =
+                        com.newtermux.features.TextExpansionStore.load(context);
+                    if (editIdx >= 0 && editIdx < list.size()) {
+                        list.get(editIdx).trigger = trigger;
+                        list.get(editIdx).expansion = expansion;
+                    } else {
+                        com.newtermux.features.TextExpansionStore.TextExpansion newExp =
+                            new com.newtermux.features.TextExpansionStore.TextExpansion();
+                        newExp.trigger = trigger;
+                        newExp.expansion = expansion;
+                        list.add(newExp);
+                    }
+                    com.newtermux.features.TextExpansionStore.save(context, list);
+                    onSave.run();
                 })
                 .setNegativeButton("Cancel", null)
                 .show();

@@ -22,6 +22,7 @@ public class NewTermuxSettings {
     public static final String KEY_STARTUP_SCRIPT_ENABLED    = "startup_script_enabled";
     public static final String KEY_URL_DETECTION_ENABLED     = "url_detection_enabled";
     public static final String KEY_SESSION_RENAME_ENABLED    = "session_rename_enabled";
+    public static final String KEY_TEXT_EXPANSION_ENABLED    = "text_expansion_enabled";
 
     private static SharedPreferences prefs(Context ctx) {
         return ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -76,6 +77,9 @@ public class NewTermuxSettings {
     public static boolean isSessionRenameEnabled(Context ctx) {
         return prefs(ctx).getBoolean(KEY_SESSION_RENAME_ENABLED, true);
     }
+    public static boolean isTextExpansionEnabled(Context ctx) {
+        return prefs(ctx).getBoolean(KEY_TEXT_EXPANSION_ENABLED, false);
+    }
 
     // Pending command — written by Settings, consumed and cleared by TermuxActivity.onResume()
     public static String getPendingCommand(Context ctx) {
@@ -111,6 +115,7 @@ public class NewTermuxSettings {
             case KEY_STARTUP_SCRIPT_ENABLED:       return isStartupScriptEnabled(ctx);
             case KEY_URL_DETECTION_ENABLED:        return isUrlDetectionEnabled(ctx);
             case KEY_SESSION_RENAME_ENABLED:       return isSessionRenameEnabled(ctx);
+            case KEY_TEXT_EXPANSION_ENABLED:       return isTextExpansionEnabled(ctx);
             default:                               return prefs(ctx).getBoolean(key, false);
         }
     }
