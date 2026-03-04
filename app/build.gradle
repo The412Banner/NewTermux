@@ -106,6 +106,7 @@ android {
             initWith debug
             applicationIdSuffix ".demo"
             buildConfigField "boolean", "IS_DEMO", "true"
+            matchingFallbacks = ['debug']  // library submodules don't have 'demo', fall back to debug
         }
     }
 
