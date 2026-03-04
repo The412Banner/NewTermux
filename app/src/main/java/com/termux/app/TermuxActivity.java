@@ -431,6 +431,10 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         // STT button (idle state)
         if (mBtnSTT != null) mBtnSTT.setColorFilter(color);
 
+        // Settings cog button
+        ImageButton btnSettings = findViewById(R.id.btn_settings);
+        if (btnSettings != null) btnSettings.setColorFilter(color);
+
         // Session chips
         updateSessionTabs();
     }
