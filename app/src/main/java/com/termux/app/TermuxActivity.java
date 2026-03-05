@@ -1213,7 +1213,12 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
             removeBtn.setOnClickListener(v -> {
                 int cur = prefs.getInt("btn_count", DRAWER_BTN_DEFAULT_NAMES.length);
                 if (cur > 1) {
-                    prefs.edit().putInt("btn_count", cur - 1).apply();
+                    // Clear saved values for the slot being removed so it starts fresh if re-added
+                    prefs.edit()
+                        .remove("btn_" + cur + "_name")
+                        .remove("btn_" + cur + "_cmd")
+                        .putInt("btn_count", cur - 1)
+                        .apply();
                     setupDrawerCommandButtons();
                 }
             });
@@ -1251,6 +1256,13 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
                 prefs.edit()
                     .putString("btn_" + (idx + 1) + "_name", newName)
                     .putString("btn_" + (idx + 1) + "_cmd",  newCmd)
+                    .apply();
+                setupDrawerCommandButtons();
+            })
+            .setNeutralButton("Reset", (d, w) -> {
+                prefs.edit()
+                    .remove("btn_" + (idx + 1) + "_name")
+                    .remove("btn_" + (idx + 1) + "_cmd")
                     .apply();
                 setupDrawerCommandButtons();
             })
