@@ -87,17 +87,12 @@ public class SettingsActivity extends AppCompatActivity {
 
             setPreferencesFromResource(R.xml.root_preferences, rootKey);
 
-            new Thread() {
-                @Override
-                public void run() {
-                    configureTermuxAPIPreference(context);
-                    configureTermuxFloatPreference(context);
-                    configureTermuxTaskerPreference(context);
-                    configureTermuxWidgetPreference(context);
-                    configureAboutPreference(context);
-                    configureDonatePreference(context);
-                }
-            }.start();
+            configureTermuxAPIPreference(context);
+            configureTermuxFloatPreference(context);
+            configureTermuxTaskerPreference(context);
+            configureTermuxWidgetPreference(context);
+            configureAboutPreference(context);
+            configureDonatePreference(context);
 
             Preference pkgManagerPref = findPreference("package_manager");
             if (pkgManagerPref != null) {

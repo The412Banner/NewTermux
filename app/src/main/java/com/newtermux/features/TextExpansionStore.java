@@ -14,11 +14,14 @@ public class TextExpansionStore {
         public String expansion;
     }
 
+    private static List<TextExpansion> sCache = null;
+
     private static SharedPreferences prefs(Context ctx) {
         return ctx.getSharedPreferences("newtermux_settings", Context.MODE_PRIVATE);
     }
 
     public static List<TextExpansion> load(Context ctx) {
+        if (sCache != null) return sCache;
         List<TextExpansion> list = new ArrayList<>();
         try {
             String json = prefs(ctx).getString("text_expansions_json", "[]");
@@ -31,6 +34,7 @@ public class TextExpansionStore {
                 if (!te.trigger.isEmpty()) list.add(te);
             }
         } catch (Exception ignored) {}
+        sCache = list;
         return list;
     }
 
@@ -44,6 +48,7 @@ public class TextExpansionStore {
                 arr.put(obj);
             }
             prefs(ctx).edit().putString("text_expansions_json", arr.toString()).apply();
+            sCache = null; // invalidate cache so next load picks up the new data
         } catch (Exception ignored) {}
     }
 

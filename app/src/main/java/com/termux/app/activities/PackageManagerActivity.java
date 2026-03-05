@@ -41,7 +41,7 @@ public class PackageManagerActivity extends AppCompatActivity {
     private static final int TAB_INSTALLED = 0;
     private static final int TAB_AVAILABLE = 1;
     private static final String DPKG_STATUS =
-        "/data/data/com.termux/files/usr/var/lib/dpkg/status";
+        com.termux.shared.termux.TermuxConstants.TERMUX_PREFIX_DIR_PATH + "/var/lib/dpkg/status";
 
     // ---- Data model ----
 
@@ -98,7 +98,7 @@ public class PackageManagerActivity extends AppCompatActivity {
 
         TabLayout tabs = findViewById(R.id.pkg_tabs);
         tabs.addTab(tabs.newTab().setText("Installed"));
-        tabs.addTab(tabs.newTab().setText("Available (" + mAvailable.size() + ")"));
+        tabs.addTab(tabs.newTab().setText("Available (…)"));
         tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override public void onTabSelected(TabLayout.Tab tab) {
                 mCurrentTab = tab.getPosition();
@@ -309,7 +309,7 @@ public class PackageManagerActivity extends AppCompatActivity {
                 sub  = v.findViewById(R.id.pkg_sub);
                 v.setOnClickListener(view -> {
                     int pos = getAdapterPosition();
-                    if (pos != RecyclerView.NO_ID && pos < mFiltered.size()) {
+                    if (pos != RecyclerView.NO_POSITION && pos < mFiltered.size()) {
                         showPackageDetail(mFiltered.get(pos));
                     }
                 });

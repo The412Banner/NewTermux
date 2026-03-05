@@ -923,27 +923,6 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         }
     }
 
-    private void createCompatibilitySymlinks() {
-        try {
-            java.io.File dataDir = getFilesDir().getParentFile();
-            if (dataDir == null) return;
-
-            // fil -> files/usr (31 chars)
-            java.io.File fil = new java.io.File(dataDir, "fil");
-            if (!fil.exists()) {
-                android.system.Os.symlink("files/usr", fil.getAbsolutePath());
-            }
-
-            // file -> files/home (32 chars)
-            java.io.File file = new java.io.File(dataDir, "file");
-            if (!file.exists()) {
-                android.system.Os.symlink("files/home", file.getAbsolutePath());
-            }
-        } catch (Exception e) {
-            android.util.Log.e("NewTermux", "Failed to create compatibility symlinks", e);
-        }
-    }
-
     public void onSTTButtonClicked() {
         if (mSpeechInputManager == null) return;
         if (mSpeechInputManager.isListening()) {
@@ -1137,8 +1116,8 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
                 getDrawer().closeDrawers();
                 TerminalSession s = getCurrentSession();
                 if (s != null) {
-                    String cmd = "pkg update -y\n";
-                    s.write(cmd.getBytes(), 0, cmd.length());
+                    byte[] cmdBytes = "pkg update -y\n".getBytes();
+                    s.write(cmdBytes, 0, cmdBytes.length);
                 }
             });
             container.addView(pkgBtn);
@@ -1157,6 +1136,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         }
 
         // --- Custom command buttons ---
+        if (!NewTermuxSettings.isShowDrawerCmdButtons(this)) return;
         for (int i = 0; i < count; i++) {
             final int idx = i;
             String defName = idx < DRAWER_BTN_DEFAULT_NAMES.length ? DRAWER_BTN_DEFAULT_NAMES[idx] : "";
@@ -1188,7 +1168,10 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
                         final String finalCmd = c + "\n";
                         mTerminalView.post(() -> {
                             TerminalSession s = getCurrentSession();
-                            if (s != null) s.write(finalCmd.getBytes(), 0, finalCmd.length());
+                            if (s != null) {
+                                byte[] finalBytes = finalCmd.getBytes();
+                                s.write(finalBytes, 0, finalBytes.length);
+                            }
                         });
                     }
                 }
@@ -1344,8 +1327,9 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
     @SuppressLint("RtlHardcoded")
     @Override
     public void onBackPressed() {
-        if (getDrawer().isDrawerOpen(Gravity.LEFT)) {
-            getDrawer().closeDrawers();
+        DrawerLayout drawer = getDrawer();
+        if (drawer.isDrawerOpen(Gravity.LEFT) || drawer.isDrawerOpen(Gravity.RIGHT)) {
+            drawer.closeDrawers();
         } else {
             finishActivityIfNotFinishing();
         }
