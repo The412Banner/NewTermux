@@ -97,7 +97,7 @@ public class PackageManagerActivity extends AppCompatActivity {
         rv.setAdapter(mAdapter);
 
         TabLayout tabs = findViewById(R.id.pkg_tabs);
-        tabs.addTab(tabs.newTab().setText("Installed"));
+        tabs.addTab(tabs.newTab().setText("Installed (…)"));
         tabs.addTab(tabs.newTab().setText("Available (…)"));
         tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override public void onTabSelected(TabLayout.Tab tab) {
@@ -171,6 +171,10 @@ public class PackageManagerActivity extends AppCompatActivity {
                 mInstalledNames.clear();
                 for (PkgEntry e : list) mInstalledNames.add(e.name);
                 mInstalledLoaded = true;
+                TabLayout tabs = findViewById(R.id.pkg_tabs);
+                if (tabs != null && tabs.getTabAt(TAB_INSTALLED) != null) {
+                    tabs.getTabAt(TAB_INSTALLED).setText("Installed (" + list.size() + ")");
+                }
                 if (mCurrentTab == TAB_INSTALLED) rebuildFiltered();
             });
         });
