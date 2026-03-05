@@ -46,6 +46,10 @@ public class TermuxApplication extends Application {
         // Set NightMode.APP_NIGHT_MODE
         TermuxThemeUtils.setAppNightMode(properties.getNightMode());
 
+        // Demo build: TermuxConstants paths are hardcoded to /data/data/com.termux/ but the demo
+        // package is com.termux.demo — skip all file-system access below to avoid permission crash.
+        if (BuildConfig.IS_DEMO) return;
+
         // Check and create termux files directory. If failed to access it like in case of secondary
         // user or external sd card installation, then don't run files directory related code
         Error error = TermuxFileUtils.isTermuxFilesDirectoryAccessible(this, true, true);

@@ -380,7 +380,14 @@ public class TermuxTerminalSessionActivityClient extends TermuxTerminalSessionCl
                 workingDirectory = currentSession.getCwd();
             }
 
-            TermuxSession newTermuxSession = service.createTermuxSession(null, null, null, workingDirectory, isFailSafe, sessionName);
+            // Demo build: use the fake shell written to the demo's own files dir; also use a
+            // writable working directory since /data/data/com.termux/ is not accessible.
+            String executablePath = null;
+            if (com.termux.BuildConfig.IS_DEMO) {
+                executablePath = TermuxInstaller.sDemoShellPath;
+                workingDirectory = mActivity.getFilesDir().getAbsolutePath();
+            }
+            TermuxSession newTermuxSession = service.createTermuxSession(executablePath, null, null, workingDirectory, isFailSafe, sessionName);
             if (newTermuxSession == null) return;
 
             TerminalSession newTerminalSession = newTermuxSession.getTerminalSession();

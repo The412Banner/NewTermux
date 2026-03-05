@@ -83,21 +83,30 @@ public final class TermuxInstaller {
         "  [ -n \"$line\" ] && echo \"[test-mode] $line\"\n" +
         "done\n";
 
+    /**
+     * Path to the fake demo shell written into the demo package's own files dir.
+     * Set by {@link #setupBootstrapIfNeeded} for IS_DEMO builds; consumed by
+     * {@link com.termux.app.terminal.TermuxTerminalSessionActivityClient#addNewSession}.
+     */
+    static String sDemoShellPath = null;
+
     /** Performs bootstrap setup if necessary. */
     static void setupBootstrapIfNeeded(final Activity activity, final Runnable whenDone) {
-        // Demo/coexist build: skip the real bootstrap. Write a fake interactive shell and proceed.
+        // Demo/coexist build: skip the real bootstrap. Write a fake interactive shell to the
+        // demo package's own files dir (the only dir we can write to) and proceed.
         if (BuildConfig.IS_DEMO) {
             new Thread() {
                 @Override
                 public void run() {
                     try {
-                        File binDir = new File(TERMUX_PREFIX_DIR_PATH, "bin");
+                        File binDir = new File(activity.getFilesDir(), "bin");
                         binDir.mkdirs();
                         File fakeShell = new File(binDir, "bash");
                         try (FileOutputStream fos = new FileOutputStream(fakeShell)) {
                             fos.write(DEMO_SHELL_SCRIPT.getBytes(StandardCharsets.UTF_8));
                         }
                         Os.chmod(fakeShell.getAbsolutePath(), 0755);
+                        sDemoShellPath = fakeShell.getAbsolutePath();
                     } catch (Exception e) {
                         Logger.logError(LOG_TAG, "Demo shell setup failed: " + e.getMessage());
                     }
