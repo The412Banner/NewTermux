@@ -1,7 +1,69 @@
-this is a personal fork if termux with the intention of modernizing the vanilla app.
+# NewTermux
 
+A personal fork of Termux with a modernized UI and extended feature set. Installs as `com.termux` — a drop-in replacement.
 
+**Latest stable:** v2.2.0 · [Download APK](https://github.com/The412Banner/NewTermux/releases/latest)
 
+---
+
+## Features
+
+### Terminal & Shell
+- Full terminal emulator with **zsh + Oh My Zsh** set up automatically on first launch
+- **Zsh plugins toggle** — enables autosuggestions and syntax highlighting (bundled, no download needed)
+- Session tabs / chips always visible with × close button
+- **Session renaming** — long-press any chip to rename it (toggleable)
+- Failsafe session mode
+
+### Toolbar
+- Configurable toolbar buttons — individually show/hide each one in Settings:
+  - **AC** — toggles keyboard autocorrect and suggestions
+  - **Root** — switches to a root shell
+  - **STT** — speech-to-text input
+  - **Packages** — opens package manager menu
+  - **Clear** — clears the terminal screen
+  - **Settings** (gear icon) — always visible
+
+### Left Drawer
+- **Utility buttons** (top section, each toggleable in Settings):
+  - **Export Screen** — saves current terminal output to a text file via the system file picker
+  - **Make Script** — pick commands from your shell history to save as a `.sh` script
+  - **Pkg Update** — runs `pkg update -y` in the current session
+- **Custom command buttons** (bottom section):
+  - Up to 10 user-defined buttons; each opens a new named session and runs its assigned command
+  - Long-press any button to edit its label and command, or **Reset** it to defaults
+  - **+** / **−** to add or remove slots; removed slots auto-clear their saved data
+  - All buttons styled with your chosen accent color
+
+### Extra Keys
+- Collapsible extra keys toolbar (ESC, TAB, arrow keys, Ctrl, Alt, etc.)
+- **Right drawer mode** — move extra keys into a swipe-in right-side drawer (toggleable)
+- **Show/hide extra keys** toggle in Settings
+
+### Appearance
+- **9 accent color presets** + fully custom color via HSV color wheel or RGB sliders
+- Color picker style (HSV/RGB) remembered between sessions
+- **6 terminal color themes** + custom theme editor (edit all 18 ANSI colors live)
+- Custom terminal theme saved to `colors.properties`
+
+### Features
+- **Text Expansion** — type a short trigger (e.g. `;ll`) then Space or Tab to expand it (e.g. `ls -la`); managed in Settings with add/edit/delete
+- **Autocorrect** — inline correction bar above the keyboard, toggleable
+- **Keyboard suggestions** toggle (enables soft keyboard suggestion strip)
+- **URL detection** — long-press a URL in the terminal to open in browser or copy (toggleable)
+- **Startup script** — dot-sourced into every new session so aliases and env vars persist (edit script directly from Settings)
+- **SSH Manager** — save multiple SSH profiles (host, port, user, key path, port forwarding tunnels); tap a profile to connect
+- **Built-in File Manager** — browse, view, edit, create, delete, and share files in your Termux home directory
+
+### Backup & Restore
+- Basic and full `.tar.gz` backup/restore of Termux data
+
+### Demo / Coexist Build
+- `newtermux-test-coexist_*.apk` installs as `com.termux.demo` alongside NewTermux or original Termux — no conflict
+- Full UI (settings, toolbar, drawer, themes, text expansion) works live
+- Fake interactive shell — no real commands execute; safe for showcasing
+
+---
 
 # Termux application
 
