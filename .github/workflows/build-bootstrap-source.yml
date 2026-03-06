@@ -22,7 +22,7 @@ jobs:
           git clone --depth 1 https://github.com/termux/termux-packages.git
           
       - name: Set up Docker
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Build Bootstrap using official scripts
         run: |
