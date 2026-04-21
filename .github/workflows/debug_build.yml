@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - 'github-releases/**'
+      - 'claude-integration'
   pull_request:
     branches:
       - main
