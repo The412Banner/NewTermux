@@ -102,6 +102,9 @@ public final class TermuxService extends Service implements AppShell.AppShellCli
     private PowerManager.WakeLock mWakeLock;
     private WifiManager.WifiLock mWifiLock;
 
+    /** True when the wake lock was acquired automatically (activity backgrounded), not by user action. */
+    private boolean mAutoWakeLock = false;
+
     /** If the user has executed the {@link TERMUX_SERVICE#ACTION_STOP_SERVICE} intent. */
     boolean mWantsToStop = false;
 
@@ -160,9 +163,7 @@ public final class TermuxService extends Service implements AppShell.AppShellCli
             }
         }
 
-        // If this service really do get killed, there is no point restarting it automatically - let the user do on next
-        // start of {@link Term):
-        return Service.START_NOT_STICKY;
+        return Service.START_STICKY;
     }
 
     @Override
@@ -352,6 +353,24 @@ public final class TermuxService extends Service implements AppShell.AppShellCli
             updateNotification();
 
         Logger.logDebug(LOG_TAG, "WakeLocks released successfully");
+    }
+
+    public boolean isWakeLockHeld() {
+        return mWakeLock != null;
+    }
+
+    /** Acquire wake lock automatically when activity goes to background. No-op if already held. */
+    public void acquireWakeLockAuto() {
+        if (mWakeLock != null) return;
+        mAutoWakeLock = true;
+        actionAcquireWakeLock();
+    }
+
+    /** Release wake lock if it was auto-acquired; leaves user-acquired wake locks alone. */
+    public void releaseWakeLockAuto() {
+        if (!mAutoWakeLock) return;
+        mAutoWakeLock = false;
+        actionReleaseWakeLock(true);
     }
 
     /** Process {@link TERMUX_SERVICE#ACTION_SERVICE_EXECUTE} intent to execute a shell command in

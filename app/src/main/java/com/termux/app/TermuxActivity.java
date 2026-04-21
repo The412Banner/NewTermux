@@ -384,6 +384,9 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
             addTermuxActivityRootViewGlobalLayoutListener();
 
         registerTermuxActivityBroadcastReceiver();
+
+        if (mTermuxService != null)
+            mTermuxService.releaseWakeLockAuto();
     }
 
     @Override
@@ -498,6 +501,9 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 
         unregisterTermuxActivityBroadcastReceiver();
         getDrawer().closeDrawers();
+
+        if (mTermuxService != null)
+            mTermuxService.acquireWakeLockAuto();
     }
 
     @Override
