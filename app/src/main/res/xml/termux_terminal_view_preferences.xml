@@ -5,6 +5,12 @@
         app:title="@string/termux_terminal_view_view_header">
 
         <SwitchPreferenceCompat
+            app:key="show_claude_chat_button"
+            app:summaryOff="@string/termux_terminal_view_show_claude_chat_button_off"
+            app:summaryOn="@string/termux_terminal_view_show_claude_chat_button_on"
+            app:title="@string/termux_terminal_view_show_claude_chat_button_title" />
+
+        <SwitchPreferenceCompat
             app:key="terminal_margin_adjustment"
             app:summaryOff="@string/termux_terminal_view_terminal_margin_adjustment_off"
             app:summaryOn="@string/termux_terminal_view_terminal_margin_adjustment_on"

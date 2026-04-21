@@ -197,6 +197,12 @@
             <string name="termux_terminal_view_view_header">View</string>
 
                 <!-- Terminal View Margin Adjustment -->
+                <!-- Claude Chat Button -->
+                <string name="termux_terminal_view_show_claude_chat_button_title">Show Claude Chat Button</string>
+                <string name="termux_terminal_view_show_claude_chat_button_off">Claude Chat toolbar button will be hidden.</string>
+                <string name="termux_terminal_view_show_claude_chat_button_on">Claude Chat toolbar button will be shown (requires Claude Chat app installed). (Default)</string>
+
+                <!-- Terminal View Margin Adjustment -->
                 <string name="termux_terminal_view_terminal_margin_adjustment_title">Terminal Margin Adjustment</string>
                 <string name="termux_terminal_view_terminal_margin_adjustment_off">Terminal margin adjustment will be disabled.</string>
                 <string name="termux_terminal_view_terminal_margin_adjustment_on">Terminal margin adjustment will be enabled.

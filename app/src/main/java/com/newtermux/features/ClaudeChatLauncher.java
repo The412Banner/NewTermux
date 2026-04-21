@@ -1,7 +1,9 @@
 package com.newtermux.features;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.widget.Toast;
 
 import com.termux.app.TermuxActivity;
 
@@ -30,6 +32,10 @@ public class ClaudeChatLauncher {
         intent.setClassName(CLAUDE_PACKAGE, CLAUDE_MAIN);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         intent.putExtra("launch_terminal", true);
-        mActivity.startActivity(intent);
+        try {
+            mActivity.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(mActivity, "Claude Chat app is not installed", Toast.LENGTH_SHORT).show();
+        }
     }
 }

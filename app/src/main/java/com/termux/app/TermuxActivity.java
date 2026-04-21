@@ -804,7 +804,8 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 
         View btnClaude = findViewById(R.id.btn_claude_chat);
         if (btnClaude != null) {
-            btnClaude.setVisibility(mClaudeChatLauncher.isInstalled() ? View.VISIBLE : View.GONE);
+            boolean showClaude = mPreferences != null && mPreferences.isShowClaudeChatButtonEnabled() && mClaudeChatLauncher.isInstalled();
+            btnClaude.setVisibility(showClaude ? View.VISIBLE : View.GONE);
             btnClaude.setOnClickListener(v -> mClaudeChatLauncher.launch());
         }
 

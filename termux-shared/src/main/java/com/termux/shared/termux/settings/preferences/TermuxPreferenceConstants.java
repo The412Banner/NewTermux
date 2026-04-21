@@ -95,6 +95,10 @@ public final class TermuxPreferenceConstants {
         public static final String KEY_TERMINAL_MARGIN_ADJUSTMENT =  "terminal_margin_adjustment";
         public static final boolean DEFAULT_TERMINAL_MARGIN_ADJUSTMENT = true;
 
+        /** Defines the key for whether the Claude Chat toolbar button is shown. */
+        public static final String KEY_SHOW_CLAUDE_CHAT_BUTTON = "show_claude_chat_button";
+        public static final boolean DEFAULT_SHOW_CLAUDE_CHAT_BUTTON = true;
+
 
         /**
          * Defines the key for whether to show terminal toolbar containing extra keys and text input field.
