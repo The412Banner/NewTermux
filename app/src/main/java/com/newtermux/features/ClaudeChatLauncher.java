@@ -29,6 +29,7 @@ public class ClaudeChatLauncher {
         Intent intent = new Intent();
         intent.setClassName(CLAUDE_PACKAGE, CLAUDE_MAIN);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra("launch_terminal", true);
         mActivity.startActivity(intent);
     }
 }
