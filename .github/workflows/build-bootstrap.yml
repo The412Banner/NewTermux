@@ -99,7 +99,7 @@ jobs:
           path: bootstrap-*.zip
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           files: bootstrap-*.zip
