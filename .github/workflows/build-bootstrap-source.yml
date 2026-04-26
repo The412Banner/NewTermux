@@ -46,7 +46,7 @@ jobs:
           ./scripts/run-docker.sh ./scripts/generate-bootstraps.sh --architectures ${{ github.event.inputs.arch }}
           
       - name: Upload Bootstrap
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bootstrap-${{ github.event.inputs.arch }}-source
           path: termux-packages/bootstrap-${{ github.event.inputs.arch }}.zip
