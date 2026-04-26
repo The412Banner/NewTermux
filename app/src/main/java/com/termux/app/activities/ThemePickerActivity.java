@@ -215,7 +215,7 @@ public class ThemePickerActivity extends AppCompatActivity {
 
     // ---- Adapter ----------------------------------------------------------------
 
-    class PickerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+    static class PickerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         final Context ctx;
         final List<Object> items = new ArrayList<>();
