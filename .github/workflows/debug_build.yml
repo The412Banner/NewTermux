@@ -6,6 +6,7 @@ on:
       - main
       - 'github-releases/**'
       - 'claude-integration'
+      - 'feature/**'
   pull_request:
     branches:
       - main
