@@ -15,7 +15,7 @@ jobs:
     
     steps:
       - name: Checkout NewTermux
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Clone termux-packages
         run: |
