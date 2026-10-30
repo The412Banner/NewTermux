@@ -1,6 +1,17 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — Fix: dual-screen deck showed no sessions + long-press menu (feature/deck-session-refresh, building)
+## 2026-10-30 — Fix: dual-screen deck showed no sessions + long-press menu (feature/deck-session-refresh, CI-green + staged)
+
+**CI:** Build run 41125794792 on c586f49b — success (BUILD SUCCESSFUL, 0 errors, no Kotlin w:/e:).
+**Staged:** `/sdcard/Download/NewTermux-deck-longpress-c586f49b.apk` (versionName 2.0.0+c586f49,
+versionCode 29), sha256 21d52cfb99f339d18cfb113a2757a240212fd911a25159e540c574468a2d8cbf
+(CI = host = device), same cert.
+
+**CHECKPOINT / RESUME POINT (21:00 UTC):** user installs (ends the session). After `cc -c`: verify
+sha256 21d52cfb… + versionName 2.0.0+c586f49; test long press on a deck session → menu; Rename →
+dialog on the main screen, keyboard on the bottom; Close session → tile disappears, notification
+count drops; Cancel / tap outside closes the menu; no ANR/FATAL. Then v2.0.1 only on the user's word.
+
 
 **Device test (df01851c installed 16:42 EDT; sha256 5a70ea38… verified):** session list FIXED —
 screencap display 2 shows 3:#3 (current, highlighted), 4:#4, 5:#5, New with 1–2 scrolled off left;
