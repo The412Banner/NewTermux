@@ -148,6 +148,7 @@ private fun DeckScreen() {
 
 @Composable
 private fun Header(act: TermuxActivity?) {
+    DeckBridge.version.intValue // re-read when settings change which toolbar buttons show
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Gap),
@@ -200,8 +201,12 @@ private fun Tile(width: Dp, label: String, labelColor: Color, bold: Boolean, onC
     }
 }
 
+// Each composable that reads data from the activity also reads DeckBridge.version itself: with
+// strong skipping (Kotlin 2.x Compose compiler) a call with the same activity instance is skipped,
+// so a read only in the parent never refreshed the session list.
 @Composable
 private fun Sessions(act: TermuxActivity, colW: Dp) {
+    DeckBridge.version.intValue
     val sessions = act.termuxService?.termuxSessions ?: emptyList()
     val current = act.currentSession
     Row(
@@ -241,6 +246,7 @@ private fun Sessions(act: TermuxActivity, colW: Dp) {
 
 @Composable
 private fun Commands(act: TermuxActivity, colW: Dp) {
+    DeckBridge.version.intValue
     val labels = act.drawerCommandLabels
     if (labels.isEmpty()) {
         Text("No drawer commands.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
