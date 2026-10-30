@@ -1,6 +1,6 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — Layout modes: status line + dual screen (feature/layout-modes, phase 1 built, NOT device-tested)
+## 2026-10-30 — Layout modes: status line + dual screen (feature/layout-modes, phase 1 CI-green + staged, NOT device-tested)
 
 **Why:** On the Retroid Pocket Duo in landscape (1920×1080 top screen) the terminal only gets
 685 px of height (≈22 rows): the toolbar (95 px) and session preview row (158 px) take the rest.
@@ -26,11 +26,22 @@ They go in Settings → Appearance as optional layouts, default Standard.
 - `ThemePickerActivity` (Settings → Appearance): new "Layout" section at the top with
   Portrait / Landscape choices.
 
-**CI:** pending. **Device test:** not done.
+**CI:** Build run 41087636857 on ec53f974 — success (both jobs; no failed/skipped steps; no
+warnings in changed files).
 
-**Resume point:** branch `feature/layout-modes` in `/root/work/NewTermux` (Duo). Next: CI green →
-stage APK in `/sdcard/Download/NewTermux-layout-modes-<sha8>.apk` with sha256 → ask before
-install → test both orientations, drawers, session switching, logcat for FATAL.
+**Staged:** `/sdcard/Download/NewTermux-layout-modes-ec53f974.apk` (apt-android-7 arm64-v8a,
+sha256 1338690f87d37a491607c22747b3264d089b00010460e761228a08d6c7c98663, same on CI list, host,
+device). Signed with the same cert as the installed v1.6.2 (sha256 B6:DA:01:48…E5:E1), versionCode
+28 → in-place update, data kept.
+
+**Device test:** not done. Waiting for the user's yes to install. NOTE: the Claude session runs
+inside NewTermux (no tmux), so installing the update ends it.
+
+**Resume point:** branch `feature/layout-modes` in `/root/work/NewTermux` (Duo). If the install
+happened: check `dumpsys package com.termux` lastUpdateTime + base.apk sha256 == 1338690f…, then
+test: Settings → Appearance → Layout (Portrait/Landscape), status line in both orientations,
+rotate while open, ☰ / ⌨ / tabs / long-press menu / toolbar buttons (root, mic, AC colors),
+`logcat -b crash` + FATAL check.
 
 ## 2026-04-25 — Session Pip View (feature/session-pip-view)
 
