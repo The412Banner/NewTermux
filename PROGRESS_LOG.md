@@ -1,6 +1,19 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, Presentation deck CI-green + staged)
+## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, dual screen DEVICE-PROVEN; updater flow not yet)
+
+**Device test round 4 (4a57e94a installed 14:46 EDT; verified sha256 340106bb…, versionName
+1.6.2+4a57e94):** user: "things look like they are working now". Measured 18:47 UTC:
+- screencap display 0 (1920×1080): terminal only, system bars hidden. screencap display 2
+  (1280×960): deck with Gboard drawn over it. Copies: /sdcard/Download/NewTermux-dual-screen-
+  {top,bottom}-20261030-1447.png.
+- dumpsys: display 2 mCurrentFocus/mFocusedApp = SecondaryDisplayLauncher; display 0 =
+  TermuxActivity; mDisplayIdToShowIme=2, mInputShown=true.
+- No ANR since install (only the 14:31 one from 95ff96a2; /data/anr unchanged), no com.termux
+  FATAL. → Dual screen: DEVICE-PROVEN (deck, keyboard over deck, typing, no ANR — user + dumpsys).
+- Still to test: updater flow on device (pretend 0.0.0 → dialog → download → cancel at the
+  installer; pill), ✕/reopen button, leave/return.
+
 
 **CI:** Build run 41108355586 on 4a57e94a — success (both jobs; BUILD SUCCESSFUL, no Kotlin w:/e:).
 APK: manifest has no ControlDeckActivity; dex has ControlDeckPresentation (extends
