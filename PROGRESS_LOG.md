@@ -11,8 +11,10 @@ User: "delete the merged branches and the v2.3.0 release".
   asset names/sizes/sha256 digests) saved locally at /root/work/backups/newtermux-release-v2.3.0-
   20261030.json (APK files not kept). Tag v2.3.0 KEPT (lightweight → 51b96a8d). Releases list now
   starts with NewTermux 2.0.1 (Latest), 2.0.0, 1.6.2.
-- Left as they were (not part of this request): claude-integration, test, feature/compose-migration,
-  feature/session-pip-view, 4 dependabot branches; old-numbering tags.
+- Then (user: "delete feature/compose-migration too"): e52ac5ee (2026-08-09, merged into main) →
+  backup `refs/backup/20261030/branch-feature-compose-migration`, deleted on GitHub (no local copy).
+- Left as they were: claude-integration, test, feature/session-pip-view, 4 dependabot branches;
+  old-numbering tags.
 
 ## 2026-10-30 — NewTermux 2.0.1 RELEASED (stable, Latest): deck session list + long-press menu
 
