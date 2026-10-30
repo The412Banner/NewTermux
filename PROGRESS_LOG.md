@@ -1,6 +1,21 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, dual screen DEVICE-PROVEN; Settings-on-second-screen building)
+## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, Settings-on-second-screen CI-green + staged)
+
+**CI:** Build run 41113058327 on c39726b4 — both jobs success. The API showed some steps as
+in_progress/null after completion (GitHub reporting glitch); verified via the job log instead:
+BUILD SUCCESSFUL, 0 ##[error], all 6 apt-android-7 artifacts uploaded. dex has openOnSecondScreen,
+isSecondScreenBusy, setLaunchDisplayId, ControlDeckPresentation.
+**Staged:** `/sdcard/Download/NewTermux-updater-dual-c39726b4.apk`, sha256
+451713b3f072c22d503889b23afe1288ddf150ae8394d06764db05bbeb2dedd1 (CI = download = host = device),
+same cert.
+
+**CHECKPOINT / RESUME POINT (19:20 UTC):** user installs (ends the session). After `cc -c`: verify
+sha256 451713b3… + versionName 1.6.2+c39726b, no ANR/FATAL. Test: deck ⚙ → Settings on the bottom
+screen, terminal readable on top (screencap both: display 0 = terminal, display 2 = Settings);
+Appearance from there stays on the bottom; Back out of Settings → deck returns; status-line ⚙ with
+the deck closed → Settings on top as before; then the updater flow + ✕/reopen + leave/return.
+
 
 **User request (Screenshot_20261030-150724: Settings covering the top screen):** "because we are
 using dual screen and the settings cog is on the second screen below, can the app settings open on
