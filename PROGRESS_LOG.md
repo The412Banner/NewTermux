@@ -1,6 +1,12 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — v2.0.1: deck session list + long-press menu (merge + release)
+## 2026-10-30 — v2.0.1: deck session list + long-press menu (merged f2cd465f; release IN PROGRESS)
+
+- Release-cut 61c13912 "Release 2.0.1 (versionCode 30)"; main Build 41129393649 green.
+- Annotated tag v2.0.1 → 61c139123f073508166fd5bfb6b67b286b6b6a78; release workflow run 41130305467.
+- **RESUME POINT (21:20 UTC, user going offline):** when back: confirm run 41130305467 success →
+  `gh release edit v2.0.1 --title "NewTermux 2.0.1" --notes-file /root/work/release-notes-v2.0.1.md
+  --latest` → verify latest = v2.0.1, assets, APK sha256 == digest, cert, versionName 2.0.1.
 
 **User decision (2026-10-30):** "go ahead and release it as v2.0.1". Tested build = c586f49b; branch
 head differs only in PROGRESS_LOG.md. Backup ref before the merge:
