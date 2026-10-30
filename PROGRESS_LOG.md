@@ -1,5 +1,11 @@
 # NewTermux Progress Log
 
+## 2026-10-30 — Updater + dual screen MERGED to main; stable release next
+
+**User decision (2026-10-30, after ✕/reopen and leave/return checks):** "all good, merge and
+release a new stable". Tested build = c39726b4; branch head differs only in PROGRESS_LOG.md.
+Backup ref before the merge: `refs/backup/20261030/main-before-updater-dual-screen` = ca866a17.
+
 ## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, updater + dual screen DEVICE-PROVEN; ✕/reopen + leave/return pending)
 
 **Device test round 6 (c39726b4, user-driven, 15:29–15:30 EDT):** updater end to end with the
