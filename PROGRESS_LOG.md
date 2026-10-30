@@ -1,6 +1,6 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — Layout modes: status line + dual screen (feature/layout-modes, phase 1 fix build 3541ee19 CI-green + staged, install pending)
+## 2026-10-30 — Layout modes: status line + dual screen (feature/layout-modes, phase 1 fix build 3541ee19 installed, round 3 mostly PASS)
 
 **Device test round 1 (Duo, build ec53f974 installed 12:39 EDT, verified: base.apk sha256 1338690f…,
 versionName 1.6.2+ec53f97):**
@@ -32,6 +32,19 @@ colors, portrait status line, soft keyboard with the status line.
 **Staged:** `/sdcard/Download/NewTermux-layout-modes-3541ee19.apk`, sha256
 0f575fb6a3e8f93a6cc7eeebc31789c13476178f817a72cbe295a525118c9f38 (CI list = download = host =
 device), cert B6:DA:01:48… (same as installed) → in-place update.
+
+**Device test round 3 (build 3541ee19 installed 12:58 EDT; verified base.apk sha256 0f575fb6…,
+versionName 1.6.2+3541ee1):**
+- Divider under the status line: measured on screencap, #333333 at rows 982–983 (top divider
+  902–903), nav bar below. PASS.
+- Left drawer scrolls (Screenshot_20261030-131009: EXPORT SCREEN scrolled off, all three "Long
+  press to set" slots reachable). The −/+ row is half visible in that shot — asked the user
+  whether it shows fully at the end of the scroll.
+- Tab long-press → Rename/Close opens ABOVE the tab, fully visible (…-131021). PASS.
+- Portrait status line (…-131057, 1080×1920): fits, dividers both sides. PASS. Prefs:
+  layout_portrait=status_line, layout_landscape=status_line.
+- No com.termux FATAL/ANR; newest tombstone = Magisk `content` notice (12:58); 13 FATALs = gms.
+- Not confirmed yet: AC/mic colors, soft keyboard with the status line.
 
 **CHECKPOINT (16:53 UTC) — RESUME POINT:** user installs 3541ee19 (ends the Claude session). After
 `cc -c`: verify `pm path com.termux` base.apk sha256 == 0f575fb6… and versionName 1.6.2+3541ee1;
