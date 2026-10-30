@@ -585,6 +585,15 @@ public final class TerminalView extends View {
         mEmulator.sendMouseEvent(button, x, y, pressed);
     }
 
+    /** Scroll by whole rows from outside the view (e.g. a scroll pad on another screen). */
+    public void scrollByRows(int rowsDown) {
+        if (mEmulator == null || rowsDown == 0) return;
+        long now = SystemClock.uptimeMillis();
+        MotionEvent event = MotionEvent.obtain(now, now, MotionEvent.ACTION_MOVE, getWidth() / 2f, getHeight() / 2f, 0);
+        doScroll(event, rowsDown);
+        event.recycle();
+    }
+
     /** Perform a scroll, either from dragging the screen or by scrolling a mouse wheel. */
     void doScroll(MotionEvent event, int rowsDown) {
         boolean up = rowsDown < 0;

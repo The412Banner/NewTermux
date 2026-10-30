@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.dp
 import com.newtermux.compose.MenuItemDivider
 import com.newtermux.compose.NewTermuxComposeTheme
 import com.newtermux.compose.outlinedMenuCard
+import com.newtermux.deck.DeckBridge
 import com.newtermux.features.ColorPickerDialog
 import com.newtermux.features.NewTermuxColorTheme
 import com.newtermux.features.NewTermuxSettings
@@ -100,6 +101,10 @@ private fun ThemePickerScreen(onBack: () -> Unit) {
     var activeAccent by remember { mutableIntStateOf(NewTermuxTheme.getAccentColor(context)) }
     var portraitLayout by remember { mutableStateOf(NewTermuxSettings.getLayout(context, false)) }
     var landscapeLayout by remember { mutableStateOf(NewTermuxSettings.getLayout(context, true)) }
+    val hasSecondScreen = remember { DeckBridge.hasSecondaryDisplay(context) }
+    val landscapeOptions = remember(hasSecondScreen) {
+        if (hasSecondScreen) LAYOUT_OPTIONS + (NewTermuxSettings.LAYOUT_DUAL_SCREEN to "Dual screen") else LAYOUT_OPTIONS
+    }
     var overflowOpen by remember { mutableStateOf(false) }
 
     // Custom-theme editor state
@@ -148,7 +153,7 @@ private fun ThemePickerScreen(onBack: () -> Unit) {
             }
 
             item(span = { GridItemSpan(maxLineSpan) }) {
-                LayoutChoiceRow("Landscape", LAYOUT_OPTIONS, landscapeLayout, activeAccent) {
+                LayoutChoiceRow("Landscape", landscapeOptions, landscapeLayout, activeAccent) {
                     NewTermuxSettings.setLayout(context, true, it)
                     landscapeLayout = it
                 }
@@ -157,7 +162,9 @@ private fun ThemePickerScreen(onBack: () -> Unit) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Text(
                     "Status line: one line at the bottom with session tabs and the toolbar buttons, " +
-                        "instead of the toolbar and session previews on top.",
+                        "instead of the toolbar and session previews on top." +
+                        (if (hasSecondScreen) " Dual screen: only the terminal on this screen; sessions, " +
+                            "commands, keys and a scroll pad on the second screen." else ""),
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,

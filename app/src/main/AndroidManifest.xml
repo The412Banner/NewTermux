@@ -270,6 +270,17 @@
             android:name="com.sec.android.support.multiwindow"
             android:value="true" />
 
+        <!-- In-app updater: serves the downloaded APK to the package installer -->
+        <provider
+            android:name="com.newtermux.update.UpdateFileProvider"
+            android:authorities="${applicationId}.updates"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/newtermux_update_paths" />
+        </provider>
+
     </application>
 
 </manifest>

@@ -58,6 +58,18 @@
             android:orientation="horizontal"
             android:gravity="center_vertical" />
 
+        <!-- Dual screen: reopen the controls on the second screen (shown only while they are closed) -->
+        <ImageButton
+            android:id="@+id/status_btn_deck"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Show controls on the second screen"
+            android:src="@drawable/ic_dual_screen"
+            android:tint="@color/nt_primary"
+            android:padding="9dp"
+            android:visibility="gone" />
+
         <ImageButton
             android:id="@+id/status_btn_keys"
             android:layout_width="40dp"

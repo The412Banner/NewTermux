@@ -57,6 +57,9 @@ import com.newtermux.compose.NewTermuxComposeTheme
 import com.newtermux.compose.outlinedMenuCard
 import com.newtermux.features.NewTermuxSettings
 import com.newtermux.features.TextExpansionStore
+import com.newtermux.update.UpdateHighlightsDialog
+import com.newtermux.update.UpdateHost
+import com.newtermux.update.UpdateManager
 import com.termux.app.TermuxActivity
 import com.termux.shared.android.PermissionUtils
 import com.termux.app.TermuxInstaller
@@ -102,7 +105,7 @@ class SettingsActivity : AppCompatActivity() {
 }
 
 private enum class Route {
-    ROOT, BACKUP, FEATURES, TEXT_EXPANSION,
+    ROOT, BACKUP, FEATURES, TEXT_EXPANSION, UPDATES,
     TERMUX, TERMINAL_IO, TERMINAL_VIEW, DEBUGGING,
     PLUGIN_API, PLUGIN_FLOAT, PLUGIN_TASKER, PLUGIN_WIDGET,
 }
@@ -120,6 +123,7 @@ private fun SettingsRoot(activity: Activity) {
         Route.BACKUP -> BackupScreen(onBack = { pop() })
         Route.FEATURES -> FeaturesScreen(activity, onBack = { pop() })
         Route.TEXT_EXPANSION -> TextExpansionScreen(onBack = { pop() })
+        Route.UPDATES -> UpdatesScreen(activity, onBack = { pop() })
         Route.TERMUX -> TermuxScreen(onBack = { pop() }, onNav = { push(it) })
         Route.TERMINAL_IO -> TerminalIOScreen(onBack = { pop() })
         Route.TERMINAL_VIEW -> TerminalViewScreen(onBack = { pop() })
@@ -263,6 +267,7 @@ private fun RootScreen(activity: Activity, onBack: () -> Unit, onNav: (Route) ->
 
     SettingsScaffold("Settings", onBack) { mod ->
         Column(modifier = mod) {
+            NavRow("Updates", "Version ${UpdateManager.installedVersionName()} · check for new releases") { onNav(Route.UPDATES) }
             NavRow("Appearance", "Accent color, UI theme and layout") { launch(ThemePickerActivity::class.java) }
             NavRow("Package Manager", "Browse, search and install packages") { launch(PackageManagerActivity::class.java) }
             NavRow("SSH Manager", "Save and connect to multiple SSH servers") { launch(SshManagerActivity::class.java) }
@@ -284,6 +289,93 @@ private fun RootScreen(activity: Activity, onBack: () -> Unit, onNav: (Route) ->
             if (donateVisible) NavRow("Donate", "Support development") { ShareUtils.openUrl(context, TermuxConstants.TERMUX_DONATE_URL) }
         }
     }
+}
+
+// ---------------------------------------------------------------- Updates
+
+@Composable
+private fun UpdatesScreen(activity: Activity, onBack: () -> Unit) {
+    val context = LocalContext.current
+    var checking by remember { mutableStateOf(false) }
+    var status by remember { mutableStateOf<String?>(null) }
+    var found by remember { mutableStateOf<UpdateManager.UpdateInfo?>(null) }
+    var showDialog by remember { mutableStateOf(false) }
+    var notify by remember { mutableStateOf(UpdateManager.isNotifyEnabled(context)) }
+    var pre by remember { mutableStateOf(UpdateManager.isIncludePrereleases(context)) }
+    var pretend by remember { mutableStateOf(UpdateManager.isPretendOld(context)) }
+    var skipped by remember { mutableStateOf(UpdateManager.skippedVersion(context)) }
+
+    fun checkNow() {
+        checking = true
+        status = null
+        UpdateManager.check(context, force = true) { info ->
+            checking = false
+            found = info?.takeIf { it.isNewer }
+            status = when {
+                info == null -> "Couldn't reach GitHub. Check the connection and try again."
+                info.isNewer -> "Update available: v${info.versionName}" + if (info.prerelease) " (prerelease)" else ""
+                else -> "You're up to date (newest release: ${info.tag})."
+            }
+            if (found != null) showDialog = true
+        }
+    }
+
+    SettingsScaffold("Updates", onBack) { mod ->
+        Column(modifier = mod) {
+            NavRow("Installed version", UpdateManager.installedVersionName(), enabled = false) {}
+            NavRow("Check now", status ?: "Look for a newer release on GitHub", enabled = !checking) { checkNow() }
+            if (checking) {
+                Row(modifier = Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.size(10.dp))
+                    Text("Checking…", style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+            found?.let { info -> NavRow("View update v${info.versionName}", "What's new, then download and install") { showDialog = true } }
+            HorizontalDivider()
+            SwitchRow("Notify me about updates", "Show a notice on the terminal screen when a new release is out (checked at most every 6 hours)", notify) {
+                notify = it
+                UpdateManager.setNotifyEnabled(context, it)
+            }
+            SwitchRow("Include prereleases", "Also offer test releases (-pre builds)", pre) {
+                pre = it
+                UpdateManager.setIncludePrereleases(context, it)
+            }
+            if (skipped.isNotEmpty()) {
+                NavRow("Skipped version: v$skipped", "Tap to be notified about it again") {
+                    UpdateManager.clearSkippedVersion(context)
+                    skipped = ""
+                }
+            }
+            NavRow("Release page", "Open the NewTermux releases on GitHub") { UpdateManager.openReleasePage(activity) }
+            if (UpdateManager.isTestBuild()) {
+                HorizontalDivider()
+                CategoryHeader("Test build")
+                SwitchRow("Pretend this is version 0.0.0", "Makes the current release show up as an update, to test the notice, download and installer", pretend) {
+                    pretend = it
+                    UpdateManager.setPretendOld(context, it)
+                }
+            }
+        }
+    }
+
+    val info = found
+    if (showDialog && info != null) {
+        UpdateHighlightsDialog(
+            info = info,
+            onLater = { showDialog = false },
+            onSkip = {
+                UpdateManager.skipVersion(context, info.versionName)
+                skipped = info.versionName
+                showDialog = false
+            },
+            onUpdate = {
+                showDialog = false
+                UpdateManager.downloadAndInstall(activity, info)
+            },
+        )
+    }
+    UpdateHost(activity)
 }
 
 // ---------------------------------------------------------------- Features

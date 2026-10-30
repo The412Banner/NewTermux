@@ -71,6 +71,11 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
+import com.newtermux.deck.DeckBridge;
+import com.newtermux.update.UpdateUi;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.viewpager.widget.ViewPager;
 
@@ -222,6 +227,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
     private LinearLayout mSessionPipContainer;
     private LinearLayout mStatusTabsContainer;
     private boolean mStatusLineMode = false;
+    private boolean mSystemBarsHidden = false;
     // Toolbar button layout params saved while the buttons live in the status line
     private final java.util.Map<Integer, ViewGroup.LayoutParams> mToolbarButtonParams = new java.util.HashMap<>();
     private static final int REQUEST_RECORD_AUDIO = 201;
@@ -367,6 +373,9 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         // Send the {@link TermuxConstants#BROADCAST_TERMUX_OPENED} broadcast to notify apps that Termux
         // app has been opened.
         TermuxUtils.sendTermuxOpenedBroadcast(this);
+
+        // Update notice overlay (pill, highlights dialog, download card)
+        UpdateUi.attach(this);
     }
 
     @Override
@@ -384,6 +393,10 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 
         if (mTermuxTerminalViewClient != null)
             mTermuxTerminalViewClient.onStart();
+
+        // Coming back to NewTermux reopens a deck the user closed. Not in onResume(): the Duo
+        // pauses/resumes this activity whenever focus moves between its two screens.
+        DeckBridge.setUserHidden(false);
 
         if (mPreferences.isTerminalMarginAdjustmentEnabled())
             addTermuxActivityRootViewGlobalLayoutListener();
@@ -430,7 +443,9 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         mIsOnResumeAfterOnCreate = false;
         applyAccentColor();
         applyFeatureSettings();
+        DeckBridge.setActivity(this);
         applyLayoutMode(getResources().getConfiguration().orientation);
+        UpdateUi.onResume(this);
         if (mTermuxTerminalSessionActivityClient != null)
             mTermuxTerminalSessionActivityClient.checkForFontAndColors();
 
@@ -542,6 +557,10 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         unregisterTermuxActivityBroadcastReceiver();
         getDrawer().closeDrawers();
 
+        // Give the second screen back (launcher, other apps' keyboard) while NewTermux is not in
+        // front; onResume() reopens the deck.
+        DeckBridge.hideDeck();
+
         // Snapshot the current tab list to disk as we go to background, so that if the process is
         // torn down while a game is in the foreground, the next launch can rehydrate the tabs. The
         // keep-alive wake lock is already held continuously by the service (session-driven).
@@ -556,6 +575,9 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         Logger.logDebug(LOG_TAG, "onDestroy");
 
         if (mIsInvalidState) return;
+
+        DeckBridge.hideDeck();
+        DeckBridge.clearActivity(this);
 
         if (mSpeechInputManager != null) { mSpeechInputManager.destroy(); mSpeechInputManager = null; }
         if (mAutoCorrectHandler != null) { mAutoCorrectHandler.destroy(); mAutoCorrectHandler = null; }
@@ -862,9 +884,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 
         ImageButton btnSettings = findViewById(R.id.btn_settings);
         if (btnSettings != null) {
-            btnSettings.setOnClickListener(v -> {
-                ActivityUtils.startActivity(this, new Intent(this, SettingsActivity.class));
-            });
+            btnSettings.setOnClickListener(v -> openSettings());
         }
 
         android.widget.TextView btnAC = findViewById(R.id.btn_autocorrect_toggle);
@@ -902,6 +922,13 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         View btnStatusDrawer = findViewById(R.id.status_btn_drawer);
         if (btnStatusDrawer != null) {
             btnStatusDrawer.setOnClickListener(v -> toggleDrawer(Gravity.START));
+        }
+        View btnStatusDeck = findViewById(R.id.status_btn_deck);
+        if (btnStatusDeck != null) {
+            btnStatusDeck.setOnClickListener(v -> {
+                DeckBridge.setUserHidden(false);
+                applyLayoutMode(getResources().getConfiguration().orientation);
+            });
         }
         View btnStatusKeys = findViewById(R.id.status_btn_keys);
         if (btnStatusKeys != null) {
@@ -1006,6 +1033,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         }
 
         updateStatusLineTabs(sessions, currentSession);
+        DeckBridge.notifyChanged();
     }
 
     /** Fill the status line with one text tab per session ("1:name"); the current one is highlighted. */
@@ -1093,7 +1121,100 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
     private void applyLayoutMode(int orientation) {
         boolean landscape = orientation == Configuration.ORIENTATION_LANDSCAPE;
         String layout = NewTermuxSettings.getLayout(this, landscape);
-        setStatusLineMode(NewTermuxSettings.LAYOUT_STATUS_LINE.equals(layout));
+        boolean dual = NewTermuxSettings.LAYOUT_DUAL_SCREEN.equals(layout) && DeckBridge.hasSecondaryDisplay(this);
+        // Dual screen: only the terminal here, the controls on the second display. When the deck
+        // is closed or can't start, the status line takes over so the controls stay reachable.
+        // While Settings is open on the second screen the deck stays away (it would cover it) but
+        // this screen keeps the terminal-only layout.
+        boolean secondScreenBusy = dual && DeckBridge.isSecondScreenBusy();
+        boolean deck = dual && !DeckBridge.getUserHidden() && (secondScreenBusy || DeckBridge.showDeck(this));
+        if (!deck || secondScreenBusy) DeckBridge.hideDeck();
+        setStatusLineMode(dual || NewTermuxSettings.LAYOUT_STATUS_LINE.equals(layout));
+        View statusLine = findViewById(R.id.newtermux_status_line);
+        if (statusLine != null) statusLine.setVisibility(mStatusLineMode && !deck ? View.VISIBLE : View.GONE);
+        // Dual screen with the deck closed: offer a button to put it back on the second screen
+        setVisible(R.id.status_btn_deck, dual && !deck);
+        setSystemBarsHidden(deck);
+        updateOverlayOffset();
+    }
+
+    private void setSystemBarsHidden(boolean hidden) {
+        if (hidden == mSystemBarsHidden) return;
+        WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        if (hidden) {
+            controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            controller.hide(WindowInsetsCompat.Type.systemBars());
+        } else {
+            controller.show(WindowInsetsCompat.Type.systemBars());
+        }
+        mSystemBarsHidden = hidden;
+    }
+
+    /** Keep the update pill just below the header, or at the top when the header is hidden. */
+    private void updateOverlayOffset() {
+        View header = findViewById(R.id.newtermux_toolbar_container);
+        if (header == null) return;
+        header.post(() -> UpdateUi.setTopOffset(header.getVisibility() == View.VISIBLE ? header.getHeight() : 0));
+    }
+
+    /** In dual screen with the deck up, Settings opens on the second screen so the terminal stays readable here. */
+    private void openSettings() {
+        if (DeckBridge.isDeckShowing() && DeckBridge.openOnSecondScreen(this, new Intent(this, SettingsActivity.class))) return;
+        ActivityUtils.startActivity(this, new Intent(this, SettingsActivity.class));
+    }
+
+    /** The deck on the second display closed (user or system), or the second screen is free again: re-apply the layout. */
+    public void onDeckClosed() {
+        runOnUiThread(() -> {
+            if (!mIsInvalidState && !isFinishing()) applyLayoutMode(getResources().getConfiguration().orientation);
+        });
+    }
+
+    // Used by the dual-screen deck (com.newtermux.deck.ControlDeckPresentation)
+
+    /** Runs a toolbar button's action even while the button itself is hidden. */
+    public void performToolbarAction(int viewId) {
+        View v = findViewById(viewId);
+        if (v != null) v.performClick();
+    }
+
+    public boolean isToolbarButtonShown(int viewId) {
+        View v = findViewById(viewId);
+        return v != null && v.getVisibility() == View.VISIBLE;
+    }
+
+    public void switchToSession(TerminalSession session) {
+        if (mTermuxTerminalSessionActivityClient == null || session == null) return;
+        mTermuxTerminalSessionActivityClient.setCurrentSession(session);
+        updateSessionTabs();
+    }
+
+    /** Labels of the left drawer's buttons, in drawer order. */
+    public List<String> getDrawerCommandLabels() {
+        List<String> labels = new ArrayList<>();
+        for (View b : drawerButtons()) labels.add(((TextView) b).getText().toString());
+        return labels;
+    }
+
+    public void clickDrawerCommand(int index) {
+        List<View> buttons = drawerButtons();
+        if (index >= 0 && index < buttons.size()) buttons.get(index).performClick();
+    }
+
+    public void longClickDrawerCommand(int index) {
+        List<View> buttons = drawerButtons();
+        if (index >= 0 && index < buttons.size()) buttons.get(index).performLongClick();
+    }
+
+    private List<View> drawerButtons() {
+        List<View> out = new ArrayList<>();
+        ViewGroup container = findViewById(R.id.drawer_cmd_container);
+        if (container == null) return out;
+        for (int i = 0; i < container.getChildCount(); i++) {
+            View c = container.getChildAt(i);
+            if (c instanceof android.widget.Button && c.getVisibility() == View.VISIBLE) out.add(c);
+        }
+        return out;
     }
 
     /**
@@ -1157,6 +1278,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
      * Only updates the matching pip without rebuilding the whole row.
      */
     public void notifyPipUpdate(TerminalSession session) {
+        DeckBridge.notifyPipUpdate(session);
         if (mSessionPipContainer == null) return;
         for (int i = 0; i < mSessionPipContainer.getChildCount(); i++) {
             android.view.View child = mSessionPipContainer.getChildAt(i);
@@ -1305,6 +1427,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
     };
 
     private void setupDrawerCommandButtons() {
+        DeckBridge.notifyChanged(); // the deck recomposes after this rebuild (same frame)
         SharedPreferences prefs = getSharedPreferences(DRAWER_PREFS, MODE_PRIVATE);
         int count = prefs.getInt("btn_count", DRAWER_BTN_DEFAULT_NAMES.length);
 
@@ -1683,7 +1806,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
                 ActivityUtils.startActivity(this, new Intent(this, HelpActivity.class));
                 return true;
             case CONTEXT_MENU_SETTINGS_ID:
-                ActivityUtils.startActivity(this, new Intent(this, SettingsActivity.class));
+                openSettings();
                 return true;
             case CONTEXT_MENU_REPORT_ID:
                 mTermuxTerminalViewClient.reportIssueFromTranscript();
@@ -1818,7 +1941,9 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
     }
 
     public ExtraKeysView getExtraKeysView() {
-        return mExtraKeysView;
+        // While the dual-screen deck is up, its keys hold the CTRL/ALT state the terminal reads.
+        ExtraKeysView deckKeys = DeckBridge.getDeckKeys();
+        return deckKeys != null ? deckKeys : mExtraKeysView;
     }
 
     public TermuxTerminalExtraKeys getTermuxTerminalExtraKeys() {
