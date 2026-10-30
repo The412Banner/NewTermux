@@ -1,6 +1,6 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — Layout modes: status line + dual screen (feature/layout-modes, phase 1 on device, round-1 fixes building)
+## 2026-10-30 — Layout modes: status line + dual screen (feature/layout-modes, phase 1 fix build 3541ee19 CI-green + staged, install pending)
 
 **Device test round 1 (Duo, build ec53f974 installed 12:39 EDT, verified: base.apk sha256 1338690f…,
 versionName 1.6.2+ec53f97):**
@@ -20,6 +20,24 @@ versionName 1.6.2+ec53f97):**
 
 **Fix commit 118134e1:** left drawer → ScrollView (`left_drawer` id kept; not referenced in Java),
 NtPopupMenu measures its final height (EXACTLY width) and sets it, 1dp divider under the status line.
+
+**Device test round 2 (still on ec53f974):** rotate to portrait → standard header back, toolbar
+buttons restored in original order (Screenshot_20261030-124940, 1080×1920); rotate back →
+status line again (…-125012). Prefs file: `layout_landscape=status_line`, no `layout_portrait`
+(portrait status line not tried yet). No NewTermux crash/FATAL/ANR since install (only the Magisk
+`content` tombstone; 07:32–08:47 FATALs are com.google.android.gms). Not yet confirmed: AC/mic
+colors, portrait status line, soft keyboard with the status line.
+
+**CI:** Build run 41092918904 on 3541ee19 — success (both jobs, no failed/skipped steps).
+**Staged:** `/sdcard/Download/NewTermux-layout-modes-3541ee19.apk`, sha256
+0f575fb6a3e8f93a6cc7eeebc31789c13476178f817a72cbe295a525118c9f38 (CI list = download = host =
+device), cert B6:DA:01:48… (same as installed) → in-place update.
+
+**CHECKPOINT (16:53 UTC) — RESUME POINT:** user installs 3541ee19 (ends the Claude session). After
+`cc -c`: verify `pm path com.termux` base.apk sha256 == 0f575fb6… and versionName 1.6.2+3541ee1;
+then test: left drawer scrolls; tab long-press menu opens ABOVE the tab; divider under the status
+line; AC/mic colors; Portrait → Status line; soft keyboard (tap terminal) with the status line;
+crash buffer + FATAL check. Then ask the user about phase 2 (dual screen).
 
 **Why:** On the Retroid Pocket Duo in landscape (1920×1080 top screen) the terminal only gets
 685 px of height (≈22 rows): the toolbar (95 px) and session preview row (158 px) take the rest.
