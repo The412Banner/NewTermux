@@ -1,6 +1,16 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, Settings-on-second-screen DEVICE-PROVEN; updater flow pending)
+## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, updater + dual screen DEVICE-PROVEN; ✕/reopen + leave/return pending)
+
+**Device test round 6 (c39726b4, user-driven, 15:29–15:30 EDT):** updater end to end with the
+test-build "Pretend 0.0.0" switch: check → pill "Update available · v1.6.2 · 51.3 MB" (Screenshot_
+20261030-153016, top-right of the terminal); download to cache/updates/termux-app_apt-android-7-
+debug_arm64-v8a.apk = 53818921 bytes, sha256 8caee7f25efdc1749916af76bb63e81fe3e17c3ba5b5eece4b971ad12570048f
+= the GitHub asset digest; installer opened (logcat: InstallStaging → PackageInstallerActivity
+displayed 15:29:43); user cancelled (installed build unchanged). Deck back on the bottom screen
+with Gboard over it. No new ANR/FATAL. → Updater: DEVICE-PROVEN. "Pretend 0.0.0" still ON
+(user should turn it off). Remaining before merge: ✕/reopen button, leave/return.
+
 
 **Device test round 5 (c39726b4 installed 15:22 EDT; verified sha256 451713b3…, versionName
 1.6.2+c39726b; tree clean):** driven by Claude with `input -d 2` (announced to the user first):
