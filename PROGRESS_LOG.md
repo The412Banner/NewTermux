@@ -1,6 +1,22 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, deck → Presentation, building)
+## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, Presentation deck CI-green + staged)
+
+**CI:** Build run 41108355586 on 4a57e94a — success (both jobs; BUILD SUCCESSFUL, no Kotlin w:/e:).
+APK: manifest has no ControlDeckActivity; dex has ControlDeckPresentation (extends
+android.app.Presentation), its onCreate addFlags(0x00020008).
+**Staged:** `/sdcard/Download/NewTermux-updater-dual-4a57e94a.apk`, sha256
+340106bbc5e038aae678fb8ac449347df96dd00d49fb5507f3551d05dcac002d (CI = host = device), same cert.
+User had set Landscape → Status line (interim advice) — must set Dual screen again to test.
+
+**CHECKPOINT / RESUME POINT (18:55 UTC):** user installs (ends the session). After `cc -c`: verify
+sha256 340106bb… + versionName 1.6.2+4a57e94, crash buffer + `ANR in com.termux` (must be none).
+Test: Landscape → Dual screen; deck on the bottom screen; tap the terminal → keyboard on the bottom
+screen over the deck AND typing works (dumpsys: display 2 mFocusedApp = launcher, not com.termux);
+press the bottom ▼/Back → no ANR; tap deck buttons/keys/scroll pad → terminal keeps input; ✕ →
+status line + reopen button; leave/return; then the updater flow (pretend 0.0.0 → CANCEL at the
+installer; pill).
+
 
 **Device test round 3 (95ff96a2 installed 14:30 EDT; verified sha256 20f1d1bc…):**
 - User: "getting an error now and the keyboard still does not show despite getting a navigation
