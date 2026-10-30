@@ -1,5 +1,11 @@
 # NewTermux Progress Log
 
+## 2026-10-30 — v2.0.1: deck session list + long-press menu (merge + release)
+
+**User decision (2026-10-30):** "go ahead and release it as v2.0.1". Tested build = c586f49b; branch
+head differs only in PROGRESS_LOG.md. Backup ref before the merge:
+`refs/backup/20261030/main-before-deck-session-refresh` = 6fe69410.
+
 ## 2026-10-30 — Fix: dual-screen deck showed no sessions + long-press menu (feature/deck-session-refresh, DEVICE-PROVEN)
 
 **Device test (c586f49b installed 16:57 EDT; sha256 21d52cfb… verified):** user: "installed and it's
