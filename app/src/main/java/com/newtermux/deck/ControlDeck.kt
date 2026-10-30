@@ -44,7 +44,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,6 +68,7 @@ import com.termux.R
 import com.termux.app.TermuxActivity
 import com.termux.app.terminal.MiniTerminalPipView
 import com.termux.shared.termux.extrakeys.ExtraKeysView
+import com.termux.terminal.TerminalSession
 
 /**
  * Control deck for the "Dual screen" layout, shown on the second display (Retroid Pocket Duo's
@@ -115,39 +119,85 @@ private fun DeckScreen() {
     // Reading the version makes the deck recompose when sessions or drawer commands change.
     DeckBridge.version.intValue
     val act = DeckBridge.activity()
-    Column(
-        modifier = Modifier.fillMaxSize().background(DeckBg).systemBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(Gap),
-    ) {
-        Header(act)
-        if (act == null) {
-            Text("NewTermux is not running on the main screen.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-            return@Column
-        }
-        // Sessions + commands on the left (scrolls if there are many), scroll pad on the right,
-        // keys across the full width below.
-        Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(Gap)) {
-            BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxHeight()) {
-                val colW = (maxWidth - Gap * (GRID_COLS - 1)) / GRID_COLS
-                Column(
-                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    SectionLabel("SESSIONS")
-                    Sessions(act, colW)
-                    Spacer(Modifier.height(2.dp))
-                    SectionLabel("COMMANDS")
-                    Commands(act, colW)
-                }
+    // Long-pressed session tile: its Rename / Close menu, drawn over the deck (not a popup window,
+    // which would take focus away from the terminal).
+    var menu by remember { mutableStateOf<Pair<TerminalSession, String>?>(null) }
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.fillMaxSize().background(DeckBg).systemBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(Gap),
+        ) {
+            Header(act)
+            if (act == null) {
+                Text("NewTermux is not running on the main screen.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                return@Column
             }
-            ScrollPad(act, Modifier.width(ScrollPadWidth).fillMaxHeight())
+            // Sessions + commands on the left (scrolls if there are many), scroll pad on the right,
+            // keys across the full width below.
+            Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(Gap)) {
+                BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                    val colW = (maxWidth - Gap * (GRID_COLS - 1)) / GRID_COLS
+                    Column(
+                        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        SectionLabel("SESSIONS")
+                        Sessions(act, colW) { session, label -> menu = session to label }
+                        Spacer(Modifier.height(2.dp))
+                        SectionLabel("COMMANDS")
+                        Commands(act, colW)
+                    }
+                }
+                ScrollPad(act, Modifier.width(ScrollPadWidth).fillMaxHeight())
+            }
+            Keys(act)
         }
-        Keys(act)
+        val m = menu
+        if (m != null && act != null) {
+            SessionMenu(
+                label = m.second,
+                onRename = { menu = null; act.renameSession(m.first) },
+                onClose = { menu = null; act.closeSession(m.first) },
+                onDismiss = { menu = null },
+            )
+        }
     }
 }
 
 @Composable
+private fun SessionMenu(label: String, onRename: () -> Unit, onClose: () -> Unit, onDismiss: () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxSize().background(Color(0x99000000)).combinedClickable(onClick = onDismiss),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier.width(280.dp).clip(RoundedCornerShape(12.dp)).background(TileBg)
+                .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
+                .combinedClickable(onClick = {}) // taps inside the card don't close it
+                .padding(vertical = 6.dp),
+        ) {
+            Text(
+                label, color = MaterialTheme.colorScheme.primary, fontSize = 13.sp, fontWeight = FontWeight.Bold,
+                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+            MenuRow("Rename", Color(0xFFE6E1EE), onRename)
+            MenuRow("Close session", MaterialTheme.colorScheme.error, onClose)
+            MenuRow("Cancel", Color(0xFFB6B6B6), onDismiss)
+        }
+    }
+}
+
+@Composable
+private fun MenuRow(text: String, color: Color, onClick: () -> Unit) {
+    Text(
+        text, color = color, fontSize = 15.sp,
+        modifier = Modifier.fillMaxWidth().combinedClickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 12.dp),
+    )
+}
+
+@Composable
 private fun Header(act: TermuxActivity?) {
+    DeckBridge.version.intValue // re-read when settings change which toolbar buttons show
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Gap),
@@ -190,8 +240,11 @@ private fun SectionLabel(text: String) {
 
 /** Name above a fixed-size box: shared by the session tiles and the new-session tile. */
 @Composable
-private fun Tile(width: Dp, label: String, labelColor: Color, bold: Boolean, onClick: () -> Unit, box: @Composable () -> Unit) {
-    Column(modifier = Modifier.width(width).combinedClickable(onClick = onClick)) {
+private fun Tile(
+    width: Dp, label: String, labelColor: Color, bold: Boolean, onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null, box: @Composable () -> Unit,
+) {
+    Column(modifier = Modifier.width(width).combinedClickable(onClick = onClick, onLongClick = onLongClick)) {
         Text(
             label, modifier = Modifier.height(LabelHeight), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
             color = labelColor, fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
@@ -200,8 +253,12 @@ private fun Tile(width: Dp, label: String, labelColor: Color, bold: Boolean, onC
     }
 }
 
+// Each composable that reads data from the activity also reads DeckBridge.version itself: with
+// strong skipping (Kotlin 2.x Compose compiler) a call with the same activity instance is skipped,
+// so a read only in the parent never refreshed the session list.
 @Composable
-private fun Sessions(act: TermuxActivity, colW: Dp) {
+private fun Sessions(act: TermuxActivity, colW: Dp, onLongPress: (TerminalSession, String) -> Unit) {
+    DeckBridge.version.intValue
     val sessions = act.termuxService?.termuxSessions ?: emptyList()
     val current = act.currentSession
     Row(
@@ -216,6 +273,7 @@ private fun Sessions(act: TermuxActivity, colW: Dp) {
                 width = colW, label = "${i + 1}:$name",
                 labelColor = if (active) MaterialTheme.colorScheme.primary else Color(0xFFBBBBBB), bold = active,
                 onClick = { act.switchToSession(s) },
+                onLongClick = { onLongPress(s, "${i + 1}:$name") },
             ) {
                 AndroidView(
                     factory = { ctx -> MiniTerminalPipView(ctx).also { DeckBridge.addPip(it) } },
@@ -241,6 +299,7 @@ private fun Sessions(act: TermuxActivity, colW: Dp) {
 
 @Composable
 private fun Commands(act: TermuxActivity, colW: Dp) {
+    DeckBridge.version.intValue
     val labels = act.drawerCommandLabels
     if (labels.isEmpty()) {
         Text("No drawer commands.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)

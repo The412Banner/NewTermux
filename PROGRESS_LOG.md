@@ -1,5 +1,62 @@
 # NewTermux Progress Log
 
+## 2026-10-30 — v2.0.1: deck session list + long-press menu (merge + release)
+
+**User decision (2026-10-30):** "go ahead and release it as v2.0.1". Tested build = c586f49b; branch
+head differs only in PROGRESS_LOG.md. Backup ref before the merge:
+`refs/backup/20261030/main-before-deck-session-refresh` = 6fe69410.
+
+## 2026-10-30 — Fix: dual-screen deck showed no sessions + long-press menu (feature/deck-session-refresh, DEVICE-PROVEN)
+
+**Device test (c586f49b installed 16:57 EDT; sha256 21d52cfb… verified):** user: "installed and it's
+working correctly". Evidence: notification went 5 → "1 session" (Close session on the deck);
+screencap display 2 (20:58 UTC) shows the long-press menu for "1:Claude" (Rename / Close session /
+Cancel over the dimmed deck), deck lists 1:Claude + New; no new ANR (newest still 14:31 from
+95ff96a2), no com.termux FATAL; tombstone_28 = Magisk `content` notice. Copies:
+/sdcard/Download/NewTermux-dual-screen-{top,bottom}-20261030-2058.png. → Ready for v2.0.1 on the
+user's word.
+
+
+**CI:** Build run 41125794792 on c586f49b — success (BUILD SUCCESSFUL, 0 errors, no Kotlin w:/e:).
+**Staged:** `/sdcard/Download/NewTermux-deck-longpress-c586f49b.apk` (versionName 2.0.0+c586f49,
+versionCode 29), sha256 21d52cfb99f339d18cfb113a2757a240212fd911a25159e540c574468a2d8cbf
+(CI = host = device), same cert.
+
+**CHECKPOINT / RESUME POINT (21:00 UTC):** user installs (ends the session). After `cc -c`: verify
+sha256 21d52cfb… + versionName 2.0.0+c586f49; test long press on a deck session → menu; Rename →
+dialog on the main screen, keyboard on the bottom; Close session → tile disappears, notification
+count drops; Cancel / tap outside closes the menu; no ANR/FATAL. Then v2.0.1 only on the user's word.
+
+
+**Device test (df01851c installed 16:42 EDT; sha256 5a70ea38… verified):** session list FIXED —
+screencap display 2 shows 3:#3 (current, highlighted), 4:#4, 5:#5, New with 1–2 scrolled off left;
+notification "5 sessions". No new ANR. User: "I cannot long press any of them to rename or close"
+→ tiles only had onClick. Added: long press → menu drawn inside the deck (label, Rename, Close
+session, Cancel; scrim tap = cancel), calling new TermuxActivity.renameSession/closeSession (same
+as the session tab menu; rename dialog on the main screen).
+
+
+**CI:** Build run 41123994051 on df01851c — success (BUILD SUCCESSFUL, 0 errors, no Kotlin w:/e:).
+**Staged:** `/sdcard/Download/NewTermux-deck-refresh-df01851c.apk` (apt-android-7 arm64-v8a,
+versionName 2.0.0+df01851, versionCode 29 = installed release → in-place), sha256
+5a70ea388bb25ade7019ad32e5e19c61d94b7779281943f0d0fb14220cad877e (CI = host = device), same cert.
+
+**CHECKPOINT / RESUME POINT (20:42 UTC):** user installs (ends the session). After `cc -c`: verify
+sha256 5a70ea38… + versionName 2.0.0+df01851; screencap display 2: SESSIONS shows every session the
+notification counts; open/close/switch a session → deck follows; no ANR/FATAL. Then (user's word)
+release as v2.0.1: merge to main with backup ref, release-cut commit (versionCode 30, 2.0.1), tag,
+notes, --latest, verify.
+
+
+**Found on v2.0.0 (installed 16:27 EDT via the in-app updater; base.apk sha256 e31821f6… = release
+asset, versionCode 29):** user: "my second screen is not showing all of my open sessions and I know
+there should be three or four". screencap display 2: SESSIONS row = only "New"; the service
+notification: "4 sessions (wake lock held)"; one TermuxActivity (t169) bound to TermuxService.
+Cause: with strong skipping (Kotlin 2.2.20 Compose compiler) Sessions(act, colW) was skipped on
+every recomposition (same args) → it kept its first composition from before the service bound
+(cold start) → empty forever; same latent issue for Commands/Header and the current-session
+highlight. Fix: each reads DeckBridge.version itself.
+
 ## 2026-10-30 — NewTermux 2.0.0 RELEASED (stable, Latest)
 
 - Release-cut commit 639078bf "Release 2.0.0 (versionCode 29)"; main Build 41116534274 green.

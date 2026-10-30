@@ -1189,6 +1189,20 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         updateSessionTabs();
     }
 
+    /** Same as Rename in the session tab menu. */
+    public void renameSession(TerminalSession session) {
+        if (mTermuxTerminalSessionActivityClient != null && session != null)
+            mTermuxTerminalSessionActivityClient.renameSession(session);
+    }
+
+    /** Same as Close in the session tab menu. */
+    public void closeSession(TerminalSession session) {
+        if (session == null) return;
+        session.finishIfRunning();
+        if (mTermuxTerminalSessionActivityClient != null)
+            mTermuxTerminalSessionActivityClient.removeFinishedSession(session);
+    }
+
     /** Labels of the left drawer's buttons, in drawer order. */
     public List<String> getDrawerCommandLabels() {
         List<String> labels = new ArrayList<>();
