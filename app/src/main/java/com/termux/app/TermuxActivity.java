@@ -394,6 +394,10 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         if (mTermuxTerminalViewClient != null)
             mTermuxTerminalViewClient.onStart();
 
+        // Coming back to NewTermux reopens a deck the user closed. Not in onResume(): the Duo
+        // pauses/resumes this activity whenever focus moves between its two screens.
+        DeckBridge.setUserHidden(false);
+
         if (mPreferences.isTerminalMarginAdjustmentEnabled())
             addTermuxActivityRootViewGlobalLayoutListener();
 
@@ -440,7 +444,6 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         applyAccentColor();
         applyFeatureSettings();
         DeckBridge.setActivity(this);
-        DeckBridge.setUserHidden(false);
         applyLayoutMode(getResources().getConfiguration().orientation);
         UpdateUi.onResume(this);
         if (mTermuxTerminalSessionActivityClient != null)

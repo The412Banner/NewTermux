@@ -279,7 +279,7 @@
             android:label="NewTermux controls"
             android:resizeableActivity="true"
             android:taskAffinity="${applicationId}.deck"
-            android:theme="@style/Theme.NewTermux" />
+            android:theme="@style/Theme.NewTermux.Deck" />
 
         <!-- In-app updater: serves the downloaded APK to the package installer -->
         <provider
