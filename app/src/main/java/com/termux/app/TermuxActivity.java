@@ -554,6 +554,10 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         unregisterTermuxActivityBroadcastReceiver();
         getDrawer().closeDrawers();
 
+        // Give the second screen back (launcher, other apps' keyboard) while NewTermux is not in
+        // front; onResume() reopens the deck.
+        DeckBridge.hideDeck();
+
         // Snapshot the current tab list to disk as we go to background, so that if the process is
         // torn down while a game is in the foreground, the next launch can rehydrate the tabs. The
         // keep-alive wake lock is already held continuously by the service (session-driven).
@@ -918,6 +922,13 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         if (btnStatusDrawer != null) {
             btnStatusDrawer.setOnClickListener(v -> toggleDrawer(Gravity.START));
         }
+        View btnStatusDeck = findViewById(R.id.status_btn_deck);
+        if (btnStatusDeck != null) {
+            btnStatusDeck.setOnClickListener(v -> {
+                DeckBridge.setUserHidden(false);
+                applyLayoutMode(getResources().getConfiguration().orientation);
+            });
+        }
         View btnStatusKeys = findViewById(R.id.status_btn_keys);
         if (btnStatusKeys != null) {
             btnStatusKeys.setOnClickListener(v -> {
@@ -1117,6 +1128,8 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         setStatusLineMode(dual || NewTermuxSettings.LAYOUT_STATUS_LINE.equals(layout));
         View statusLine = findViewById(R.id.newtermux_status_line);
         if (statusLine != null) statusLine.setVisibility(mStatusLineMode && !deck ? View.VISIBLE : View.GONE);
+        // Dual screen with the deck closed: offer a button to put it back on the second screen
+        setVisible(R.id.status_btn_deck, dual && !deck);
         setSystemBarsHidden(deck);
         updateOverlayOffset();
     }
@@ -1404,6 +1417,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
     };
 
     private void setupDrawerCommandButtons() {
+        DeckBridge.notifyChanged(); // the deck recomposes after this rebuild (same frame)
         SharedPreferences prefs = getSharedPreferences(DRAWER_PREFS, MODE_PRIVATE);
         int count = prefs.getInt("btn_count", DRAWER_BTN_DEFAULT_NAMES.length);
 
@@ -1565,8 +1579,6 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
                 }
             });
         }
-
-        DeckBridge.notifyChanged();
     }
 
     private void showEditDrawerButtonDialog(int idx) {

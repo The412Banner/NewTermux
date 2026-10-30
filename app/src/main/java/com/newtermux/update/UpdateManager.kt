@@ -218,7 +218,7 @@ object UpdateManager {
         val out = ArrayList<Highlight>()
         for (line in body.lines()) {
             val m = re.find(line) ?: continue
-            val title = m.groupValues[1].trim().trimEnd('.', ':')
+            val title = m.groupValues[1].replace("`", "").trim().trimEnd('.', ':')
             val text = m.groupValues[2].trim().replace("**", "").replace("`", "")
             if (title.isNotEmpty()) out.add(Highlight(title, text))
             if (out.size == 5) break
