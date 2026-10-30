@@ -1,6 +1,13 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — v2.0.1: deck session list + long-press menu (merged f2cd465f; release IN PROGRESS)
+## 2026-10-30 — NewTermux 2.0.1 RELEASED (stable, Latest): deck session list + long-press menu
+
+- Release run 41130305467 (headSha 61c13912) success; 10 assets; notes from
+  /root/work/release-notes-v2.0.1.md (2 highlights), title "NewTermux 2.0.1", `--latest`;
+  releases/latest = v2.0.1. Verified: arm64 APK sha256 8765cccdef1e6f69c09d49580bea5079d69c72ccfca064402a93bed6be67f54e
+  = GitHub digest; cert B6:DA:01:48…; manifest versionName 2.0.1; tag → 61c139123f07.
+- Slip: PROGRESS_LOG commit ffce3e5e was pushed to main during the release run; the run built
+  61c13912 (from the tag), so the release is unaffected.
 
 - Release-cut 61c13912 "Release 2.0.1 (versionCode 30)"; main Build 41129393649 green.
 - Annotated tag v2.0.1 → 61c139123f073508166fd5bfb6b67b286b6b6a78; release workflow run 41130305467.
