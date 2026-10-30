@@ -6,6 +6,8 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -66,6 +69,7 @@ import com.newtermux.compose.NewTermuxComposeTheme
 import com.newtermux.compose.outlinedMenuCard
 import com.newtermux.features.ColorPickerDialog
 import com.newtermux.features.NewTermuxColorTheme
+import com.newtermux.features.NewTermuxSettings
 import com.newtermux.features.NewTermuxTheme
 
 /**
@@ -94,6 +98,8 @@ private fun ThemePickerScreen(onBack: () -> Unit) {
 
     var activeTheme by remember { mutableStateOf(NewTermuxColorTheme.getCurrentTheme(context)) }
     var activeAccent by remember { mutableIntStateOf(NewTermuxTheme.getAccentColor(context)) }
+    var portraitLayout by remember { mutableStateOf(NewTermuxSettings.getLayout(context, false)) }
+    var landscapeLayout by remember { mutableStateOf(NewTermuxSettings.getLayout(context, true)) }
     var overflowOpen by remember { mutableStateOf(false) }
 
     // Custom-theme editor state
@@ -132,6 +138,32 @@ private fun ThemePickerScreen(onBack: () -> Unit) {
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            item(span = { GridItemSpan(maxLineSpan) }) { SectionHeader("Layout") }
+
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                LayoutChoiceRow("Portrait", LAYOUT_OPTIONS, portraitLayout, activeAccent) {
+                    NewTermuxSettings.setLayout(context, false, it)
+                    portraitLayout = it
+                }
+            }
+
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                LayoutChoiceRow("Landscape", LAYOUT_OPTIONS, landscapeLayout, activeAccent) {
+                    NewTermuxSettings.setLayout(context, true, it)
+                    landscapeLayout = it
+                }
+            }
+
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Text(
+                    "Status line: one line at the bottom with session tabs and the toolbar buttons, " +
+                        "instead of the toolbar and session previews on top.",
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
             item(span = { GridItemSpan(maxLineSpan) }) { SectionHeader("Terminal Theme") }
 
             items(terminalKeys, key = { it }) { key ->
@@ -215,6 +247,50 @@ private fun ThemePickerScreen(onBack: () -> Unit) {
                 editorKeys = null
             },
         )
+    }
+}
+
+private val LAYOUT_OPTIONS = listOf(
+    NewTermuxSettings.LAYOUT_STANDARD to "Standard",
+    NewTermuxSettings.LAYOUT_STATUS_LINE to "Status line",
+)
+
+@Composable
+private fun LayoutChoiceRow(
+    label: String,
+    options: List<Pair<String, String>>,
+    selected: String,
+    accent: Int,
+    onSelect: (String) -> Unit,
+) {
+    val onAccent = if (androidx.core.graphics.ColorUtils.calculateLuminance(accent) > 0.5) Color(0xFF1B1029) else Color.White
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(label, modifier = Modifier.width(96.dp), style = MaterialTheme.typography.bodyLarge)
+        options.forEach { (value, title) ->
+            val active = value == selected
+            val shape = RoundedCornerShape(20.dp)
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .clip(shape)
+                    .background(if (active) Color(accent) else Color.Transparent)
+                    .border(1.dp, if (active) Color(accent) else MaterialTheme.colorScheme.outline, shape)
+                    .clickable { onSelect(value) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    title,
+                    color = if (active) onAccent else MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 1,
+                )
+            }
+        }
     }
 }
 

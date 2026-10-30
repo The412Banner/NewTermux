@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status line layout (Settings → Appearance → Layout): replaces the top toolbar and session
+     previews with one line at the bottom. The toolbar buttons are moved into status_buttons at
+     runtime by TermuxActivity.setStatusLineMode(). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/newtermux_status_line"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/nt_toolbar_bg"
+    android:visibility="gone">
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/nt_divider" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="2dp"
+        android:paddingEnd="2dp">
+
+        <ImageButton
+            android:id="@+id/status_btn_drawer"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Command drawer"
+            android:src="@drawable/ic_menu"
+            android:tint="@color/nt_toolbar_icon"
+            android:padding="9dp" />
+
+        <HorizontalScrollView
+            android:id="@+id/status_tabs_scroll"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/status_tabs_container"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp" />
+
+        </HorizontalScrollView>
+
+        <LinearLayout
+            android:id="@+id/status_buttons"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical" />
+
+        <ImageButton
+            android:id="@+id/status_btn_keys"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Extra keys"
+            android:src="@drawable/ic_keyboard"
+            android:tint="@color/nt_toolbar_icon"
+            android:padding="9dp" />
+
+    </LinearLayout>
+
+</LinearLayout>

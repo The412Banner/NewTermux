@@ -9,6 +9,7 @@
 
     <!-- Top bar: app name + feature buttons -->
     <LinearLayout
+        android:id="@+id/newtermux_toolbar_row"
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:orientation="horizontal"

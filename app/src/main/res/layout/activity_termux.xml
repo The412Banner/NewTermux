@@ -121,6 +121,8 @@
 
     </RelativeLayout>
 
+    <include layout="@layout/newtermux_status_line" />
+
     <View
         android:id="@+id/activity_termux_bottom_space_view"
         android:layout_width="match_parent"
