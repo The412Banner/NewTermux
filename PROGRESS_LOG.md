@@ -1,6 +1,22 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, round-1 fixes CI-green + staged)
+## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, round-2 fixes building)
+
+**Device test round 2 (9edc8ab0 installed 14:16 EDT; verified sha256 13d1f3c3…, versionName
+1.6.2+9edc8ab; no NewTermux crash):**
+- Deck grid layout as requested (screencap of display 2): New tile = preview size, 4 aligned
+  columns, uniform 36dp header buttons, scroll pad right column. OK.
+- Events log: deck launched 14:17:51 (394 ms), finished 14:18:00 by app-request right after a tap
+  (✕). The Duo pauses/resumes TermuxActivity when focus moves between screens
+  (`wm_pause_activity … top-resumed-changed`) → resetting userHidden in onResume would reopen a
+  closed deck → moved to onStart.
+- BUG (user): "keyboard still does not show up on the second screen like it should on top of the
+  app". dumpsys: IME window #21 above deck #22 (ALT_FOCUSABLE_IM works), isVisible=true,
+  mInputShown=true, nav bar shows the IME-back ▼ — but nothing drawn. Cause:
+  `imeControlTarget in display# 2` = SecondaryDisplayLauncher, which is `visible=false` under the
+  opaque deck → never runs the IME show animation. Fix: translucent deck theme (launcher stays
+  visible behind it). Making the deck focusable was rejected: Gboard text would go to the deck.
+
 
 **CI:** Build run 41104339557 on 9edc8ab0 — success (both jobs, no failed steps; job log BUILD
 SUCCESSFUL, no Kotlin w:/e: lines). APK checked with dexdump: ControlDeckActivity.onCreate loads
