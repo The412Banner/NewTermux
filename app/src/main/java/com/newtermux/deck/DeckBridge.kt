@@ -1,7 +1,15 @@
 package com.newtermux.deck
 
+import android.app.Activity
+import android.app.ActivityOptions
+import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.hardware.display.DisplayManager
+import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.Display
 import androidx.compose.runtime.mutableIntStateOf
@@ -10,6 +18,8 @@ import com.termux.app.terminal.MiniTerminalPipView
 import com.termux.shared.termux.extrakeys.ExtraKeysView
 import com.termux.terminal.TerminalSession
 import java.lang.ref.WeakReference
+import java.util.Collections
+import java.util.WeakHashMap
 
 /**
  * Links the terminal activity (top screen) with [ControlDeckPresentation] (second screen) for the
@@ -22,6 +32,14 @@ object DeckBridge {
     private var deck: ControlDeckPresentation? = null
     private var closingByApp = false
     private val pips = ArrayList<MiniTerminalPipView>()
+    private val main = Handler(Looper.getMainLooper())
+
+    // Our activities (Settings and what it opens) living on the second screen; the deck stays
+    // hidden while there are any, so it doesn't cover them.
+    private val secondScreenActivities: MutableSet<Activity> = Collections.newSetFromMap(WeakHashMap())
+    private var secondScreenLaunchAt = 0L
+    private var callbacksRegistered = false
+    private const val SECOND_SCREEN_LAUNCH_TIMEOUT_MS = 3000L
 
     /** Set when the user closed the deck; cleared when NewTermux is started again. */
     @JvmStatic var userHidden = false
@@ -109,6 +127,76 @@ object DeckBridge {
             activity()?.onDeckClosed()
         }
     }
+
+    /** Settings (or another of our screens) is open on the second screen, or about to be. */
+    @JvmStatic
+    fun isSecondScreenBusy(): Boolean =
+        secondScreenActivities.isNotEmpty() ||
+            (secondScreenLaunchAt != 0L && System.currentTimeMillis() - secondScreenLaunchAt < SECOND_SCREEN_LAUNCH_TIMEOUT_MS)
+
+    /**
+     * Opens [intent] on the second screen in place of the deck, so the terminal stays readable on
+     * the main screen; the deck comes back when the last such screen closes. Returns false when it
+     * can't (no second display / launch refused) so the caller opens it normally.
+     */
+    @JvmStatic
+    fun openOnSecondScreen(activity: TermuxActivity, intent: Intent): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
+        if (isSecondScreenBusy()) return true
+        val display = secondaryDisplay(activity) ?: return false
+        trackSecondScreenActivities(activity.application)
+        return try {
+            secondScreenLaunchAt = System.currentTimeMillis()
+            hideDeck()
+            val options = ActivityOptions.makeBasic().setLaunchDisplayId(display.displayId)
+            // A task can't span displays: start a separate one there.
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+            activity.startActivity(intent, options.toBundle())
+            Log.i(TAG, "${intent.component?.shortClassName} opened on display ${display.displayId}")
+            // Launch refused without an exception: give the deck back after the timeout.
+            main.postDelayed({
+                if (secondScreenActivities.isEmpty() && secondScreenLaunchAt != 0L) {
+                    secondScreenLaunchAt = 0L
+                    activity()?.onDeckClosed()
+                }
+            }, SECOND_SCREEN_LAUNCH_TIMEOUT_MS)
+            true
+        } catch (e: Exception) {
+            Log.w(TAG, "open on display ${display.displayId} failed: $e")
+            secondScreenLaunchAt = 0L
+            activity()?.onDeckClosed()
+            false
+        }
+    }
+
+    private fun trackSecondScreenActivities(app: Application) {
+        if (callbacksRegistered) return
+        callbacksRegistered = true
+        app.registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
+            override fun onActivityCreated(a: Activity, savedInstanceState: Bundle?) {
+                if (a is TermuxActivity || displayIdOf(a) == Display.DEFAULT_DISPLAY) return
+                secondScreenActivities.add(a)
+                secondScreenLaunchAt = 0L
+            }
+
+            override fun onActivityDestroyed(a: Activity) {
+                if (!secondScreenActivities.remove(a) || a.isChangingConfigurations) return
+                // Last one gone (e.g. Settings closed with Back): put the deck back.
+                if (secondScreenActivities.isEmpty()) main.post { activity()?.onDeckClosed() }
+            }
+
+            override fun onActivityStarted(a: Activity) {}
+            override fun onActivityResumed(a: Activity) {}
+            override fun onActivityPaused(a: Activity) {}
+            override fun onActivityStopped(a: Activity) {}
+            override fun onActivitySaveInstanceState(a: Activity, outState: Bundle) {}
+        })
+    }
+
+    @Suppress("DEPRECATION")
+    private fun displayIdOf(a: Activity): Int =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) a.display?.displayId ?: Display.DEFAULT_DISPLAY
+        else a.windowManager.defaultDisplay.displayId
 
     @JvmStatic
     fun notifyChanged() {

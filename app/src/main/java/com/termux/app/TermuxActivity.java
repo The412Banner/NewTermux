@@ -884,9 +884,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 
         ImageButton btnSettings = findViewById(R.id.btn_settings);
         if (btnSettings != null) {
-            btnSettings.setOnClickListener(v -> {
-                ActivityUtils.startActivity(this, new Intent(this, SettingsActivity.class));
-            });
+            btnSettings.setOnClickListener(v -> openSettings());
         }
 
         android.widget.TextView btnAC = findViewById(R.id.btn_autocorrect_toggle);
@@ -1126,8 +1124,11 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         boolean dual = NewTermuxSettings.LAYOUT_DUAL_SCREEN.equals(layout) && DeckBridge.hasSecondaryDisplay(this);
         // Dual screen: only the terminal here, the controls on the second display. When the deck
         // is closed or can't start, the status line takes over so the controls stay reachable.
-        boolean deck = dual && !DeckBridge.getUserHidden() && DeckBridge.showDeck(this);
-        if (!deck) DeckBridge.hideDeck();
+        // While Settings is open on the second screen the deck stays away (it would cover it) but
+        // this screen keeps the terminal-only layout.
+        boolean secondScreenBusy = dual && DeckBridge.isSecondScreenBusy();
+        boolean deck = dual && !DeckBridge.getUserHidden() && (secondScreenBusy || DeckBridge.showDeck(this));
+        if (!deck || secondScreenBusy) DeckBridge.hideDeck();
         setStatusLineMode(dual || NewTermuxSettings.LAYOUT_STATUS_LINE.equals(layout));
         View statusLine = findViewById(R.id.newtermux_status_line);
         if (statusLine != null) statusLine.setVisibility(mStatusLineMode && !deck ? View.VISIBLE : View.GONE);
@@ -1156,7 +1157,13 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         header.post(() -> UpdateUi.setTopOffset(header.getVisibility() == View.VISIBLE ? header.getHeight() : 0));
     }
 
-    /** The deck on the second display closed (user or system): give this screen its controls back. */
+    /** In dual screen with the deck up, Settings opens on the second screen so the terminal stays readable here. */
+    private void openSettings() {
+        if (DeckBridge.isDeckShowing() && DeckBridge.openOnSecondScreen(this, new Intent(this, SettingsActivity.class))) return;
+        ActivityUtils.startActivity(this, new Intent(this, SettingsActivity.class));
+    }
+
+    /** The deck on the second display closed (user or system), or the second screen is free again: re-apply the layout. */
     public void onDeckClosed() {
         runOnUiThread(() -> {
             if (!mIsInvalidState && !isFinishing()) applyLayoutMode(getResources().getConfiguration().orientation);
@@ -1799,7 +1806,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
                 ActivityUtils.startActivity(this, new Intent(this, HelpActivity.class));
                 return true;
             case CONTEXT_MENU_SETTINGS_ID:
-                ActivityUtils.startActivity(this, new Intent(this, SettingsActivity.class));
+                openSettings();
                 return true;
             case CONTEXT_MENU_REPORT_ID:
                 mTermuxTerminalViewClient.reportIssueFromTranscript();
