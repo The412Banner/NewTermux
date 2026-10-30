@@ -1,5 +1,19 @@
 # NewTermux Progress Log
 
+## 2026-10-30 — Cleanup: merged branches + old v2.3.0 release deleted (user)
+
+User: "delete the merged branches and the v2.3.0 release".
+- Branches (all verified ancestors of main 3efa7aef) backed up, then deleted on GitHub + locally:
+  feature/layout-modes 0f248d60 → `refs/backup/20261030/branch-feature-layout-modes`;
+  feature/updater-dual-screen d06c0ee4 → `refs/backup/20261030/branch-feature-updater-dual-screen`;
+  feature/deck-session-refresh 4ab3b161 → `refs/backup/20261030/branch-feature-deck-session-refresh`.
+- Release v2.3.0 (old numbering, published 2026-03-06, 10 APKs / 554 MB) deleted; its JSON (notes,
+  asset names/sizes/sha256 digests) saved locally at /root/work/backups/newtermux-release-v2.3.0-
+  20261030.json (APK files not kept). Tag v2.3.0 KEPT (lightweight → 51b96a8d). Releases list now
+  starts with NewTermux 2.0.1 (Latest), 2.0.0, 1.6.2.
+- Left as they were (not part of this request): claude-integration, test, feature/compose-migration,
+  feature/session-pip-view, 4 dependabot branches; old-numbering tags.
+
 ## 2026-10-30 — NewTermux 2.0.1 RELEASED (stable, Latest): deck session list + long-press menu
 
 - **Updater proven end to end with a real release (22:12 UTC):** the Duo (test build 2.0.0+c586f49)
