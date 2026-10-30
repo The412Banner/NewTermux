@@ -34,8 +34,11 @@ sha256 1338690f87d37a491607c22747b3264d089b00010460e761228a08d6c7c98663, same on
 device). Signed with the same cert as the installed v1.6.2 (sha256 B6:DA:01:48…E5:E1), versionCode
 28 → in-place update, data kept.
 
-**Device test:** not done. Waiting for the user's yes to install. NOTE: the Claude session runs
-inside NewTermux (no tmux), so installing the update ends it.
+**Device test:** not done. CHECKPOINT 2026-10-30 ~16:45 UTC: the user is installing the staged APK
+themselves. The Claude session runs inside NewTermux on the Duo (cgroup `/apps/uid_10122/…`, plain
+`cc` alias, no tmux), so the install ends it. Memory (newtermux-project, newtermux-log, devices,
+termux-setup, device-launch-tests, session-workflow, confirmed-issues + index) updated and synced
+before the install. Restart with `cc -c` (continues the last chat).
 
 **Resume point:** branch `feature/layout-modes` in `/root/work/NewTermux` (Duo). If the install
 happened: check `dumpsys package com.termux` lastUpdateTime + base.apk sha256 == 1338690f…, then
