@@ -1,5 +1,13 @@
 # NewTermux Progress Log
 
+## 2026-10-30 — Layout modes phase 1 MERGED to main (status line); next: updater + dual screen on one branch
+
+**User decision (2026-10-30):** "merge what we have then build the updater and phase 2 together on
+the same branch and hand me a new APK to test". Merged with three small confirmations still open
+(drawer −/+ row fully visible at the end of the scroll, AC/mic colors, status line above the soft
+keyboard). Tested build = 3541ee19; the branch head differs from it only in PROGRESS_LOG.md.
+Backup ref before the merge: `refs/backup/20261030/main-before-layout-modes` = 6001da84.
+
 ## 2026-10-30 — Layout modes: status line + dual screen (feature/layout-modes, phase 1 fix build 3541ee19 installed, round 3 mostly PASS)
 
 **Device test round 1 (Duo, build ec53f974 installed 12:39 EDT, verified: base.apk sha256 1338690f…,
