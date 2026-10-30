@@ -1,5 +1,16 @@
 # NewTermux Progress Log
 
+## 2026-10-30 — Fix: dual-screen deck showed no sessions (feature/deck-session-refresh, building)
+
+**Found on v2.0.0 (installed 16:27 EDT via the in-app updater; base.apk sha256 e31821f6… = release
+asset, versionCode 29):** user: "my second screen is not showing all of my open sessions and I know
+there should be three or four". screencap display 2: SESSIONS row = only "New"; the service
+notification: "4 sessions (wake lock held)"; one TermuxActivity (t169) bound to TermuxService.
+Cause: with strong skipping (Kotlin 2.2.20 Compose compiler) Sessions(act, colW) was skipped on
+every recomposition (same args) → it kept its first composition from before the service bound
+(cold start) → empty forever; same latent issue for Commands/Header and the current-session
+highlight. Fix: each reads DeckBridge.version itself.
+
 ## 2026-10-30 — NewTermux 2.0.0 RELEASED (stable, Latest)
 
 - Release-cut commit 639078bf "Release 2.0.0 (versionCode 29)"; main Build 41116534274 green.
