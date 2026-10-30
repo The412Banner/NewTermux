@@ -36,15 +36,22 @@
                 android:scrollbars="vertical"
                 tools:ignore="UnusedAttribute" />
 
-            <LinearLayout
+            <!-- ScrollView so the command buttons stay reachable when they don't fit the height -->
+            <ScrollView
                 android:id="@+id/left_drawer"
                 android:layout_width="240dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="start|top"
                 android:descendantFocusability="blocksDescendants"
-                android:orientation="vertical"
+                android:focusable="false"
+                android:scrollbarStyle="outsideOverlay"
                 android:padding="12dp"
                 android:background="@drawable/bg_drawer">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
                 <!-- Dynamic command buttons (populated in code) -->
                 <LinearLayout
@@ -89,6 +96,8 @@
                 </LinearLayout>
 
             </LinearLayout>
+
+            </ScrollView>
 
             <!-- Right drawer: extra keys panel, enabled via Settings → Features → Extra Keys in Right Drawer -->
             <LinearLayout

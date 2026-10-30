@@ -70,4 +70,10 @@
 
     </LinearLayout>
 
+    <!-- Separates the line from the Android navigation bar below -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/nt_divider" />
+
 </LinearLayout>
