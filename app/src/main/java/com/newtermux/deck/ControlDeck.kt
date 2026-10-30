@@ -2,10 +2,14 @@
 
 package com.newtermux.deck
 
+import android.app.Presentation
 import android.os.Bundle
+import android.view.Display
 import android.view.WindowManager
-import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.ui.platform.ComposeView
+import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.lifecycle.setViewTreeViewModelStoreOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -63,33 +68,31 @@ import com.termux.shared.termux.extrakeys.ExtraKeysView
 
 /**
  * Control deck for the "Dual screen" layout, shown on the second display (Retroid Pocket Duo's
- * bottom screen) while the top screen shows only the terminal. Its window is not focusable, so
- * hardware keyboard / controller input keeps going to the terminal.
+ * bottom screen) while the top screen shows only the terminal.
+ *
+ * A Presentation (a window of TermuxActivity placed on the other display), not an Activity: an
+ * activity there became the focused app on that display, so with its window not focusable any
+ * key sent to that screen (its Back/hide-keyboard button) ended in an ANR ("Application does not
+ * have a focused window"), and the screen's launcher, which runs the soft keyboard there, was
+ * hidden. As a non-focusable window the deck leaves focus, keys and the keyboard where they were.
  */
-class ControlDeckActivity : AppCompatActivity() {
+class ControlDeckPresentation(private val owner: TermuxActivity, display: Display) :
+    Presentation(owner, display, R.style.Theme_NewTermux) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // NOT_FOCUSABLE keeps key/controller input on the terminal. On its own it also puts the
-        // window above the soft keyboard, which this device shows on the second screen
-        // (Retroid setting ime_show_on_second=1); ALT_FOCUSABLE_IM puts the keyboard back on top.
-        window.addFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
-        DeckBridge.register(this)
-        setContent {
-            NewTermuxComposeTheme(this) { DeckScreen() }
+        // Never take focus (keys and the soft keyboard stay with the terminal); ALT_FOCUSABLE_IM
+        // keeps the keyboard, which this device shows on the second screen, above the deck.
+        window?.addFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
+        setContentView(ComposeView(context).apply {
+            setContent { NewTermuxComposeTheme(context) { DeckScreen() } }
+        })
+        // A dialog window has no lifecycle owners of its own; Compose needs them from the activity.
+        window?.decorView?.let { decor ->
+            decor.setViewTreeLifecycleOwner(owner)
+            decor.setViewTreeSavedStateRegistryOwner(owner)
+            decor.setViewTreeViewModelStoreOwner(owner)
         }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        // Covered on the second screen (e.g. Home there): close, so the top screen gets the
-        // status line and its "show controls" button back instead of staying without controls.
-        if (!isFinishing && !isChangingConfigurations) finish()
-    }
-
-    override fun onDestroy() {
-        DeckBridge.unregister(this)
-        super.onDestroy()
     }
 }
 
@@ -113,7 +116,7 @@ private fun DeckScreen() {
     DeckBridge.version.intValue
     val act = DeckBridge.activity()
     Column(
-        modifier = Modifier.fillMaxSize().background(DeckBg).padding(horizontal = 12.dp, vertical = 8.dp),
+        modifier = Modifier.fillMaxSize().background(DeckBg).systemBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(Gap),
     ) {
         Header(act)

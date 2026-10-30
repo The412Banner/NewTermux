@@ -1,16 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Dual-screen control deck: translucent so the second screen's launcher stays visible behind
-         it. That window controls the soft keyboard there (Retroid shows the keyboard on the second
-         screen); while it is hidden the keyboard is "shown" but never drawn. The deck paints its
-         own opaque background. -->
-    <style name="Theme.NewTermux.Deck" parent="Theme.NewTermux">
-        <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:backgroundDimEnabled">false</item>
-    </style>
-
     <!-- Base NewTermux theme - Material 3 Dark -->
     <style name="Theme.NewTermux" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/nt_primary</item>

@@ -1163,7 +1163,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         });
     }
 
-    // Used by the dual-screen deck (com.newtermux.deck.ControlDeckActivity)
+    // Used by the dual-screen deck (com.newtermux.deck.ControlDeckPresentation)
 
     /** Runs a toolbar button's action even while the button itself is hidden. */
     public void performToolbarAction(int viewId) {

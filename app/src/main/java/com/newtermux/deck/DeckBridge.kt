@@ -1,13 +1,7 @@
 package com.newtermux.deck
 
-import android.app.Activity
-import android.app.ActivityOptions
 import android.content.Context
-import android.content.Intent
 import android.hardware.display.DisplayManager
-import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.Display
 import androidx.compose.runtime.mutableIntStateOf
@@ -18,21 +12,18 @@ import com.termux.terminal.TerminalSession
 import java.lang.ref.WeakReference
 
 /**
- * Links the terminal activity (top screen) with [ControlDeckActivity] (second screen) for the
+ * Links the terminal activity (top screen) with [ControlDeckPresentation] (second screen) for the
  * "Dual screen" landscape layout. Everything runs on the main thread.
  */
 object DeckBridge {
     private const val TAG = "NT_DECK"
-    private const val LAUNCH_TIMEOUT_MS = 3000L
 
     private var activityRef: WeakReference<TermuxActivity>? = null
-    private var deckRef: WeakReference<ControlDeckActivity>? = null
-    private var launchAt = 0L
+    private var deck: ControlDeckPresentation? = null
     private var closingByApp = false
-    private val main = Handler(Looper.getMainLooper())
     private val pips = ArrayList<MiniTerminalPipView>()
 
-    /** Set when the user closed the deck; cleared when NewTermux comes back to the foreground. */
+    /** Set when the user closed the deck; cleared when NewTermux is started again. */
     @JvmStatic var userHidden = false
 
     /** Bumped when sessions or drawer commands change, so the deck recomposes. */
@@ -55,51 +46,36 @@ object DeckBridge {
     fun activity(): TermuxActivity? = activityRef?.get()
 
     /** A presentation display other than the built-in default one (the Duo's bottom screen). */
-    @JvmStatic
-    fun secondaryDisplayId(ctx: Context): Int {
-        val dm = ctx.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager ?: return -1
+    fun secondaryDisplay(ctx: Context): Display? {
+        val dm = ctx.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager ?: return null
         return dm.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION)
             .firstOrNull { it.displayId != Display.DEFAULT_DISPLAY && (it.flags and Display.FLAG_PRIVATE) == 0 }
-            ?.displayId ?: -1
     }
 
     @JvmStatic
-    fun hasSecondaryDisplay(ctx: Context): Boolean =
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && secondaryDisplayId(ctx) >= 0
+    fun hasSecondaryDisplay(ctx: Context): Boolean = secondaryDisplay(ctx) != null
 
     @JvmStatic
-    fun isDeckShowing(): Boolean = deckRef?.get()?.let { !it.isFinishing && !it.isDestroyed } == true
+    fun isDeckShowing(): Boolean = deck?.isShowing == true
 
     /**
-     * Shows the deck on the second display. Returns true when it is up or launching; false when
-     * there is no second display or the launch was refused.
+     * Shows the deck on the second display. Returns true when it is up; false when there is no
+     * second display or the window could not be added.
      */
     @JvmStatic
-    fun showDeck(activity: Activity): Boolean {
+    fun showDeck(activity: TermuxActivity): Boolean {
         if (isDeckShowing()) return true
-        if (launchAt != 0L && System.currentTimeMillis() - launchAt < LAUNCH_TIMEOUT_MS) return true
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
-        val id = secondaryDisplayId(activity)
-        if (id < 0) return false
+        val display = secondaryDisplay(activity) ?: return false
         return try {
-            val options = ActivityOptions.makeBasic().setLaunchDisplayId(id)
-            val intent = Intent(activity, ControlDeckActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            activity.startActivity(intent, options.toBundle())
-            launchAt = System.currentTimeMillis()
-            Log.i(TAG, "deck launched on display $id")
-            // If the deck never shows up (launch silently refused), fall back to the status line.
-            main.postDelayed({
-                if (deckRef?.get() == null && launchAt != 0L) {
-                    Log.w(TAG, "deck did not start on display $id")
-                    launchAt = 0L
-                    userHidden = true
-                    activity()?.onDeckClosed()
-                }
-            }, LAUNCH_TIMEOUT_MS)
+            val p = ControlDeckPresentation(activity, display)
+            p.setOnDismissListener { onDismissed(p) }
+            closingByApp = false
+            p.show()
+            deck = p
+            Log.i(TAG, "deck shown on display ${display.displayId}")
             true
         } catch (e: Exception) {
-            Log.w(TAG, "deck launch on display $id failed: $e")
-            launchAt = 0L
+            Log.w(TAG, "deck on display ${display.displayId} failed: $e")
             false
         }
     }
@@ -107,34 +83,28 @@ object DeckBridge {
     /** Closes the deck because the layout no longer wants it (not a user action). */
     @JvmStatic
     fun hideDeck() {
-        launchAt = 0L
-        val deck = deckRef?.get() ?: return
+        val p = deck ?: return
         closingByApp = true
-        deck.finish()
+        try { p.dismiss() } catch (_: Exception) { }
     }
 
     /** The deck's close button. */
     fun hideByUser() {
         userHidden = true
-        deckRef?.get()?.finish()
+        try { deck?.dismiss() } catch (_: Exception) { }
     }
 
-    internal fun register(deck: ControlDeckActivity) {
-        deckRef = WeakReference(deck)
-        launchAt = 0L
-        closingByApp = false
-    }
-
-    internal fun unregister(deck: ControlDeckActivity) {
-        if (deckRef?.get() !== deck) return
-        deckRef = null
+    /** Runs on the main thread after a dismiss, also when the display goes away. */
+    private fun onDismissed(p: ControlDeckPresentation) {
+        if (deck !== p) return
+        deck = null
         deckKeys = null
         pips.clear()
         val byApp = closingByApp
         closingByApp = false
         if (!byApp) {
-            // Closed with Back, the close button or by the system: keep it closed until NewTermux
-            // is resumed, and give the top screen its controls back.
+            // Closed with the close button or because the display went away: keep it closed until
+            // NewTermux is started again, and give the top screen its controls back.
             userHidden = true
             activity()?.onDeckClosed()
         }
