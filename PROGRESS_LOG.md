@@ -1,10 +1,14 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — Updater + dual screen MERGED to main; stable release next
+## 2026-10-30 — Updater + dual screen MERGED to main (e70fdfd5); stable v2.0.0 release
 
 **User decision (2026-10-30, after ✕/reopen and leave/return checks):** "all good, merge and
 release a new stable". Tested build = c39726b4; branch head differs only in PROGRESS_LOG.md.
 Backup ref before the merge: `refs/backup/20261030/main-before-updater-dual-screen` = ca866a17.
+Merge e70fdfd5 (--no-ff): tree == branch tree, code == tested c39726b4.
+**Version decision:** v1.7.0 is taken by an old-numbering tag; user first picked v1.6.3, then:
+"make it 2.0 actually" → versionName 2.0.0 / tag v2.0.0 (free: no tag, no release), versionCode 29.
+Release-cut commit next, tag after main CI is green.
 
 ## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, updater + dual screen DEVICE-PROVEN; ✕/reopen + leave/return pending)
 
