@@ -1,6 +1,24 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, round-1 fixes e2d02ab, CI pending)
+## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, round-1 fixes CI-green + staged)
+
+**CI:** Build run 41104339557 on 9edc8ab0 — success (both jobs, no failed steps; job log BUILD
+SUCCESSFUL, no Kotlin w:/e: lines). APK checked with dexdump: ControlDeckActivity.onCreate loads
+0x00020008 (FLAG_NOT_FOCUSABLE | FLAG_ALT_FOCUSABLE_IM) before addFlags; onStop → finish();
+status_btn_deck and ic_dual_screen present.
+**Staged:** `/sdcard/Download/NewTermux-updater-dual-9edc8ab0.apk` (apt-android-7 arm64-v8a),
+sha256 13d1f3c3a61b378c795b67de08b9d5e334a283777650d5862615022d0d21b72e (CI = host = device),
+cert B6:DA:01:48… (same as installed 1.6.2+8a761e9) → in-place update.
+
+**CHECKPOINT / RESUME POINT (18:16 UTC):** user installs it (ends the session). After `cc -c`:
+verify base.apk sha256 == 13d1f3c3… + versionName 1.6.2+9edc8ab + crash buffer. Then test:
+deck grid (+ New tile = session size, columns line up, header buttons equal), scroll pad on the
+right, keyboard (tap the terminal → Gboard shows on the bottom screen ABOVE the deck), switch to
+another app → deck closes / bottom screen back → return → deck back, ✕ → status line +
+dual-screen button → tap → deck back, Home on the bottom screen → deck closes + status line;
+then the updater steps (Updates → Check now, pretend 0.0.0 → dialog → download → CANCEL at the
+installer, pill).
+
 
 **Device test round 1 (8a761e9c installed 14:01 EDT; verified base.apk sha256 3dbb7f7d…,
 versionName 1.6.2+8a761e9):**
