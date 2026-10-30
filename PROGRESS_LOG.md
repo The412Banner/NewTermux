@@ -1,6 +1,15 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — Fix: dual-screen deck showed no sessions + long-press menu (feature/deck-session-refresh, CI-green + staged)
+## 2026-10-30 — Fix: dual-screen deck showed no sessions + long-press menu (feature/deck-session-refresh, DEVICE-PROVEN)
+
+**Device test (c586f49b installed 16:57 EDT; sha256 21d52cfb… verified):** user: "installed and it's
+working correctly". Evidence: notification went 5 → "1 session" (Close session on the deck);
+screencap display 2 (20:58 UTC) shows the long-press menu for "1:Claude" (Rename / Close session /
+Cancel over the dimmed deck), deck lists 1:Claude + New; no new ANR (newest still 14:31 from
+95ff96a2), no com.termux FATAL; tombstone_28 = Magisk `content` notice. Copies:
+/sdcard/Download/NewTermux-dual-screen-{top,bottom}-20261030-2058.png. → Ready for v2.0.1 on the
+user's word.
+
 
 **CI:** Build run 41125794792 on c586f49b — success (BUILD SUCCESSFUL, 0 errors, no Kotlin w:/e:).
 **Staged:** `/sdcard/Download/NewTermux-deck-longpress-c586f49b.apk` (versionName 2.0.0+c586f49,
