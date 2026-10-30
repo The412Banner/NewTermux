@@ -270,6 +270,28 @@
             android:name="com.sec.android.support.multiwindow"
             android:value="true" />
 
+        <!-- Dual-screen layout: control deck on the second display (own task, never focused) -->
+        <activity
+            android:name="com.newtermux.deck.ControlDeckActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|density|screenLayout|keyboard|keyboardHidden|navigation"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:label="NewTermux controls"
+            android:resizeableActivity="true"
+            android:taskAffinity="${applicationId}.deck"
+            android:theme="@style/Theme.NewTermux" />
+
+        <!-- In-app updater: serves the downloaded APK to the package installer -->
+        <provider
+            android:name="com.newtermux.update.UpdateFileProvider"
+            android:authorities="${applicationId}.updates"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/newtermux_update_paths" />
+        </provider>
+
     </application>
 
 </manifest>

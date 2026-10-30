@@ -33,6 +33,7 @@ public class NewTermuxSettings {
     public static final String KEY_LAYOUT_LANDSCAPE          = "layout_landscape";
     public static final String LAYOUT_STANDARD               = "standard";     // toolbar + session previews on top
     public static final String LAYOUT_STATUS_LINE            = "status_line";  // one tmux-style line at the bottom
+    public static final String LAYOUT_DUAL_SCREEN            = "dual_screen";  // landscape: terminal on top, controls on the second display
 
     private static SharedPreferences prefs(Context ctx) {
         return ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
