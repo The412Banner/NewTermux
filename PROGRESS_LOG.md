@@ -1,6 +1,23 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, round-2 fixes CI-green + staged)
+## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, deck → Presentation, building)
+
+**Device test round 3 (95ff96a2 installed 14:30 EDT; verified sha256 20f1d1bc…):**
+- User: "getting an error now and the keyboard still does not show despite getting a navigation
+  button and when I press that the keyboard does appear for a second until I try to type then it
+  disappears again" + "not responding pop-up still keeps happening".
+- logcat: `ANR in com.termux (com.termux/com.newtermux.deck.ControlDeckActivity)`, Reason:
+  `Input dispatching timed out (Application does not have a focused window)` (14:31:05; trace
+  /data/anr/anr_2026-10-30-14-31-03-321). Cause: an Activity on display 2 = that display's focused
+  app; with a NOT_FOCUSABLE window, key events to display 2 (its Back/▼ button) have no target →
+  ANR. Touching it also moved focus off the terminal (this device does not multi-resume) → the
+  keyboard closes on typing. The translucent theme could not fix focus.
+- Fix: deck = `ControlDeckPresentation` (android.app.Presentation of TermuxActivity on display 2,
+  FLAG_NOT_FOCUSABLE | FLAG_ALT_FOCUSABLE_IM, Compose with the activity's lifecycle owners). No
+  activity on display 2 → launcher stays focused/visible there (keys + keyboard work as without the
+  deck). Removed ControlDeckActivity, its manifest entry and Theme.NewTermux.Deck. Interim advice
+  to the user: Landscape → Status line until the new build.
+
 
 **CI:** Build run 41106177559 on 95ff96a2 — success (both jobs; BUILD SUCCESSFUL, no Kotlin w:/e:).
 resources.arsc contains Theme.NewTermux.Deck.
