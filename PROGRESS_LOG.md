@@ -1,6 +1,17 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, dual screen DEVICE-PROVEN; updater flow not yet)
+## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, dual screen DEVICE-PROVEN; Settings-on-second-screen building)
+
+**User request (Screenshot_20261030-150724: Settings covering the top screen):** "because we are
+using dual screen and the settings cog is on the second screen below, can the app settings open on
+the second screen leaving the session viewable and readable on the top screen still?"
+→ openSettings(): with the deck showing, SettingsActivity starts on the second display
+(setLaunchDisplayId, NEW_TASK|MULTIPLE_TASK). DeckBridge tracks our activities on that display
+(ActivityLifecycleCallbacks, weak set); the deck is hidden while any exist and returns when the last
+is destroyed (also after a 3 s launch timeout). applyLayoutMode keeps the top screen terminal-only
+meanwhile. Settings' own screens (Appearance, Package/SSH/File manager, installer prompt) open on
+the same display.
+
 
 **Device test round 4 (4a57e94a installed 14:46 EDT; verified sha256 340106bb…, versionName
 1.6.2+4a57e94):** user: "things look like they are working now". Measured 18:47 UTC:
