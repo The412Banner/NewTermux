@@ -1,6 +1,17 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, Settings-on-second-screen CI-green + staged)
+## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, Settings-on-second-screen DEVICE-PROVEN; updater flow pending)
+
+**Device test round 5 (c39726b4 installed 15:22 EDT; verified sha256 451713b3…, versionName
+1.6.2+c39726b; tree clean):** driven by Claude with `input -d 2` (announced to the user first):
+- Deck up (screencap display 2), focus: display 0 TermuxActivity, display 2 launcher.
+- `input -d 2 tap 1043 56` (deck ⚙) → SettingsActivity task #163 on display 2 (mFocusedApp there);
+  screencap: bottom = Settings, top = terminal still visible and updating. PASS.
+- `input -d 2 keyevent KEYCODE_BACK` → Settings gone, display 2 focus = launcher, deck back
+  (screencap; Gboard over it as the terminal regained focus). PASS.
+- No ANR since install (newest still 14:31 from 95ff96a2), no com.termux FATAL.
+- Remaining before merge: updater flow on device, ✕/reopen button, leave/return.
+
 
 **CI:** Build run 41113058327 on c39726b4 — both jobs success. The API showed some steps as
 in_progress/null after completion (GitHub reporting glitch); verified via the job log instead:
