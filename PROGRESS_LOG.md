@@ -1,5 +1,20 @@
 # NewTermux Progress Log
 
+## 2026-10-30 — NewTermux 2.0.0 RELEASED (stable, Latest)
+
+- Release-cut commit 639078bf "Release 2.0.0 (versionCode 29)"; main Build 41116534274 green.
+- Annotated tag `v2.0.0` (tagger The412Banner) → 639078bfaead88081d8efe3ef32e773b3efff5b4; release
+  workflow run 41117352348 (headSha 639078bf) success; 10 assets (termux-app_apt-android-7-debug_
+  {arm64-v8a,armeabi-v7a,x86,x86_64,universal}.apk + newtermux-test-coexist_demo_*), not prerelease.
+- Notes replaced (title "NewTermux 2.0.0"; What's new = 4 "- **Title.**" highlights for the in-app
+  dialog; updating/installation; updater credited as ported from Bannerlator) and `--latest` set
+  (old v2.3.0 release has higher semver); releases/latest = v2.0.0.
+- Verified: downloaded arm64 APK sha256 e31821f6fddd6faa4f85a20d5d91910be15561cda2332f0b8732203b824b070f
+  = GitHub asset digest; cert B6:DA:01:48… (same as 1.6.2); manifest versionName 2.0.0; dex has
+  UpdateManager + ControlDeckPresentation.
+- Open (user's call): old v2.3.0 release page (old numbering) still listed; merged branches
+  feature/layout-modes + feature/updater-dual-screen kept (delete only on the user's word).
+
 ## 2026-10-30 — Updater + dual screen MERGED to main (e70fdfd5); stable v2.0.0 release
 
 **User decision (2026-10-30, after ✕/reopen and leave/return checks):** "all good, merge and
