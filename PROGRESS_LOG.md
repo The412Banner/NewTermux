@@ -1,5 +1,34 @@
 # NewTermux Progress Log
 
+## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, built, CI pending, NOT device-tested)
+
+**Why:** user: "do we have an app updates also and update notification pills similar to how
+bannerlator works? if not can we add it also" (verified: NewTermux had no update code) and then
+"merge what we have then build the updater and phase 2 together on the same branch and hand me
+a new APK to test". Branch `feature/updater-dual-screen` off main ca866a17 (layout modes merged).
+
+**Built (commit 2d50b1d):**
+- Updater `com.newtermux.update` — ported from Bannerlator `core/UpdateManager.kt` +
+  `ui/UpdateCards.kt` (@9846e8c6, same author), simplified: GitHub releases API only
+  (`releases/latest`, or the newest release when "Include prereleases" is on), 6 h cooldown,
+  semver compare on the tag vs BuildConfig.VERSION_NAME (`+build` ignored → CI builds don't
+  nag). Asset: `termux-app_<TERMUX_PACKAGE_VARIANT>-debug_<abi>.apk` (demo:
+  `newtermux-test-coexist_demo_<abi>.apk`, fallback universal). Download to cacheDir/updates,
+  size + GitHub asset `digest` sha256 check, install via `UpdateFileProvider`
+  (`${applicationId}.updates`). UI: pill (top-right of the terminal, below the header),
+  highlights from "- **Title.** text" bullets in the release notes, download/failed cards;
+  overlay ComposeView never takes focus. Settings → Updates (check now, notify, prereleases,
+  skipped version, release page, test-build-only "pretend 0.0.0").
+- Dual screen `com.newtermux.deck` — Landscape → "Dual screen" (only offered when
+  `DisplayManager.DISPLAY_CATEGORY_PRESENTATION` has a non-private display; the Duo's display 2
+  has FLAG_PRESENTATION|FLAG_TRUSTED). Top: terminal only + system bars hidden.
+  `ControlDeckActivity` on the second display via `setLaunchDisplayId` (FLAG_NOT_FOCUSABLE,
+  own taskAffinity): toolbar actions (performClick on the real buttons), live session previews
+  (MiniTerminalPipView), drawer commands (reuses the drawer's buttons, long-press = edit),
+  extra keys (TermuxActivity.getExtraKeysView() returns the deck's keys while up, so CTRL/ALT
+  work), scroll pad (new `TerminalView.scrollByRows`). Deck closed (✕/Back/system) → status
+  line on the top screen until NewTermux is resumed; launch not seen in 3 s → same fallback.
+
 ## 2026-10-30 — Layout modes phase 1 MERGED to main (status line); next: updater + dual screen on one branch
 
 **User decision (2026-10-30):** "merge what we have then build the updater and phase 2 together on
