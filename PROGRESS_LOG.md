@@ -1,6 +1,19 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, round-2 fixes building)
+## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, round-2 fixes CI-green + staged)
+
+**CI:** Build run 41106177559 on 95ff96a2 — success (both jobs; BUILD SUCCESSFUL, no Kotlin w:/e:).
+resources.arsc contains Theme.NewTermux.Deck.
+**Staged:** `/sdcard/Download/NewTermux-updater-dual-95ff96a2.apk`, sha256
+20f1d1bc23606efa9a02e0fdf5208579b686407b82ab95b34fd1382cd21d7b96 (CI = host = device), same cert.
+
+**CHECKPOINT / RESUME POINT (18:35 UTC):** user installs it (ends the session). After `cc -c`:
+verify base.apk sha256 == 20f1d1bc… + versionName 1.6.2+95ff96a + crash buffer. Test FIRST: tap
+the terminal with the deck up → Gboard visible on the bottom screen over the deck (dumpsys:
+launcher task visible=true behind the translucent deck). Then ✕ → status line stays (touching the
+terminal must NOT reopen the deck) → dual-screen button reopens it; leave/return reopens it; then
+the updater steps (pretend 0.0.0 → dialog → download → CANCEL at the installer; pill).
+
 
 **Device test round 2 (9edc8ab0 installed 14:16 EDT; verified sha256 13d1f3c3…, versionName
 1.6.2+9edc8ab; no NewTermux crash):**
