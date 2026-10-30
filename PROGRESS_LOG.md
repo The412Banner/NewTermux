@@ -1,6 +1,14 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — Fix: dual-screen deck showed no sessions (feature/deck-session-refresh, CI-green + staged)
+## 2026-10-30 — Fix: dual-screen deck showed no sessions + long-press menu (feature/deck-session-refresh, building)
+
+**Device test (df01851c installed 16:42 EDT; sha256 5a70ea38… verified):** session list FIXED —
+screencap display 2 shows 3:#3 (current, highlighted), 4:#4, 5:#5, New with 1–2 scrolled off left;
+notification "5 sessions". No new ANR. User: "I cannot long press any of them to rename or close"
+→ tiles only had onClick. Added: long press → menu drawn inside the deck (label, Rename, Close
+session, Cancel; scrim tap = cancel), calling new TermuxActivity.renameSession/closeSession (same
+as the session tab menu; rename dialog on the main screen).
+
 
 **CI:** Build run 41123994051 on df01851c — success (BUILD SUCCESSFUL, 0 errors, no Kotlin w:/e:).
 **Staged:** `/sdcard/Download/NewTermux-deck-refresh-df01851c.apk` (apt-android-7 arm64-v8a,
