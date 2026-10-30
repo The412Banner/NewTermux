@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -219,6 +220,10 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
     private ImageButton mBtnSTT;
     private ImageButton mBtnRootToggle;
     private LinearLayout mSessionPipContainer;
+    private LinearLayout mStatusTabsContainer;
+    private boolean mStatusLineMode = false;
+    // Toolbar button layout params saved while the buttons live in the status line
+    private final java.util.Map<Integer, ViewGroup.LayoutParams> mToolbarButtonParams = new java.util.HashMap<>();
     private static final int REQUEST_RECORD_AUDIO = 201;
 
     // SAF launchers for Export Screen and Make Script
@@ -425,6 +430,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
         mIsOnResumeAfterOnCreate = false;
         applyAccentColor();
         applyFeatureSettings();
+        applyLayoutMode(getResources().getConfiguration().orientation);
         if (mTermuxTerminalSessionActivityClient != null)
             mTermuxTerminalSessionActivityClient.checkForFontAndColors();
 
@@ -890,6 +896,28 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 
         // Session pip row
         mSessionPipContainer = findViewById(R.id.session_pip_container);
+
+        // Status line (alternative layout, see applyLayoutMode())
+        mStatusTabsContainer = findViewById(R.id.status_tabs_container);
+        View btnStatusDrawer = findViewById(R.id.status_btn_drawer);
+        if (btnStatusDrawer != null) {
+            btnStatusDrawer.setOnClickListener(v -> toggleDrawer(Gravity.START));
+        }
+        View btnStatusKeys = findViewById(R.id.status_btn_keys);
+        if (btnStatusKeys != null) {
+            btnStatusKeys.setOnClickListener(v -> {
+                if (mExtraKeysInDrawerModeAtCreation) {
+                    toggleDrawer(Gravity.END);
+                } else {
+                    // Same pref that onResume() applies to the extra keys row
+                    boolean show = !NewTermuxSettings.isExtraKeysVisible(this);
+                    NewTermuxSettings.set(this, NewTermuxSettings.KEY_EXTRA_KEYS_VISIBLE, show);
+                    ViewPager vp = getTerminalToolbarViewPager();
+                    if (vp != null) vp.setVisibility(show ? View.VISIBLE : View.GONE);
+                }
+            });
+        }
+
         updateSessionTabs();
 
         // STT result callback
@@ -976,6 +1004,136 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 
             mSessionPipContainer.addView(wrapper);
         }
+
+        updateStatusLineTabs(sessions, currentSession);
+    }
+
+    /** Fill the status line with one text tab per session ("1:name"); the current one is highlighted. */
+    private void updateStatusLineTabs(java.util.List<com.termux.shared.termux.shell.command.runner.terminal.TermuxSession> sessions,
+                                      TerminalSession currentSession) {
+        if (mStatusTabsContainer == null) return;
+
+        mStatusTabsContainer.removeAllViews();
+        float density = getResources().getDisplayMetrics().density;
+        int accent = NewTermuxTheme.getAccentColor(this);
+        int onAccent = androidx.core.graphics.ColorUtils.calculateLuminance(accent) > 0.5 ? 0xFF1B1029 : 0xFFFFFFFF;
+        View activeTab = null;
+
+        for (int i = 0; i < sessions.size(); i++) {
+            TerminalSession session = sessions.get(i).getTerminalSession();
+            boolean active = session == currentSession;
+            String name = (session.mSessionName != null && !session.mSessionName.isEmpty())
+                    ? session.mSessionName : "#" + (i + 1);
+
+            TextView tab = new TextView(this);
+            tab.setText((i + 1) + ":" + name);
+            tab.setTypeface(android.graphics.Typeface.MONOSPACE);
+            tab.setTextSize(13f);
+            tab.setMaxLines(1);
+            tab.setMaxWidth((int) (180 * density));
+            tab.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            tab.setGravity(Gravity.CENTER);
+            tab.setPadding((int) (10 * density), 0, (int) (10 * density), 0);
+            tab.setTextColor(active ? onAccent : 0xFFCFC6DD);
+            android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
+            bg.setCornerRadius(6 * density);
+            bg.setColor(active ? accent : 0x00000000);
+            tab.setBackground(bg);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, (int) (30 * density));
+            lp.setMarginEnd((int) (4 * density));
+            tab.setLayoutParams(lp);
+
+            tab.setOnClickListener(v -> {
+                if (mTermuxTerminalSessionActivityClient != null) {
+                    mTermuxTerminalSessionActivityClient.setCurrentSession(session);
+                    updateSessionTabs();
+                }
+            });
+            tab.setOnLongClickListener(v -> {
+                showSessionPopupMenu(v, session);
+                return true;
+            });
+
+            mStatusTabsContainer.addView(tab);
+            if (active) activeTab = tab;
+        }
+
+        // Keep the current tab in view when there are more tabs than fit
+        if (activeTab != null && mStatusTabsContainer.getParent() instanceof android.widget.HorizontalScrollView) {
+            final View tabToShow = activeTab;
+            final android.widget.HorizontalScrollView scroll = (android.widget.HorizontalScrollView) mStatusTabsContainer.getParent();
+            scroll.post(() -> scroll.smoothScrollTo(Math.max(0, tabToShow.getLeft() - tabToShow.getWidth()), 0));
+        }
+    }
+
+    private void toggleDrawer(int gravity) {
+        DrawerLayout drawer = getDrawer();
+        if (drawer.isDrawerOpen(gravity)) drawer.closeDrawer(gravity);
+        else drawer.openDrawer(gravity);
+    }
+
+    // -----------------------------------------------------------------------------------------
+    // Screen layout per orientation (Settings → Appearance → Layout)
+    // -----------------------------------------------------------------------------------------
+
+    private static final int[] TOOLBAR_BUTTON_IDS = {
+        R.id.btn_autocorrect_toggle, R.id.btn_packages_menu, R.id.btn_clear_terminal,
+        R.id.btn_stt, R.id.btn_root_toggle, R.id.btn_settings, R.id.btn_new_session
+    };
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // configChanges includes orientation, so the activity is not recreated on rotation
+        if (mIsInvalidState) return;
+        applyLayoutMode(newConfig.orientation);
+    }
+
+    private void applyLayoutMode(int orientation) {
+        boolean landscape = orientation == Configuration.ORIENTATION_LANDSCAPE;
+        String layout = NewTermuxSettings.getLayout(this, landscape);
+        setStatusLineMode(NewTermuxSettings.LAYOUT_STATUS_LINE.equals(layout));
+    }
+
+    /**
+     * Switch between the standard header (toolbar + session previews on top) and the status line
+     * at the bottom. The toolbar buttons are moved, not copied, so their click handlers and state
+     * colors (root, speech, AC) keep working in both places.
+     */
+    private void setStatusLineMode(boolean on) {
+        if (on == mStatusLineMode) return;
+        View header = findViewById(R.id.newtermux_toolbar_container);
+        View statusLine = findViewById(R.id.newtermux_status_line);
+        ViewGroup toolbarRow = findViewById(R.id.newtermux_toolbar_row);
+        ViewGroup statusButtons = findViewById(R.id.status_buttons);
+        if (header == null || statusLine == null || toolbarRow == null || statusButtons == null) return;
+
+        float density = getResources().getDisplayMetrics().density;
+        for (int id : TOOLBAR_BUTTON_IDS) {
+            View button = findViewById(id);
+            if (button == null || !(button.getParent() instanceof ViewGroup)) continue;
+            ViewGroup.LayoutParams current = button.getLayoutParams();
+            ((ViewGroup) button.getParent()).removeView(button);
+            if (on) {
+                mToolbarButtonParams.put(id, current);
+                boolean icon = button instanceof ImageButton;
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                        icon ? (int) (40 * density) : current.width,
+                        (int) ((icon ? 40 : 30) * density));
+                if (current instanceof ViewGroup.MarginLayoutParams)
+                    lp.setMarginEnd(((ViewGroup.MarginLayoutParams) current).getMarginEnd());
+                statusButtons.addView(button, lp);
+            } else {
+                ViewGroup.LayoutParams original = mToolbarButtonParams.get(id);
+                toolbarRow.addView(button, original != null ? original : current);
+            }
+        }
+
+        header.setVisibility(on ? View.GONE : View.VISIBLE);
+        statusLine.setVisibility(on ? View.VISIBLE : View.GONE);
+        mStatusLineMode = on;
+        updateSessionTabs();
     }
 
     private void showSessionPopupMenu(View anchor, TerminalSession session) {

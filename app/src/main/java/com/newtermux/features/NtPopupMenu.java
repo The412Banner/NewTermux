@@ -86,8 +86,15 @@ public final class NtPopupMenu {
         int width = container.getMeasuredWidth();
         int min = (int) (140 * d);
         int max = (int) (320 * d);
-        popup.setWidth(Math.max(min, Math.min(max, width)));
-        popup.setHeight(ViewGroup.LayoutParams.WRAP_CONTENT);
+        int finalWidth = Math.max(min, Math.min(max, width));
+        popup.setWidth(finalWidth);
+        // Give the popup its real height: with WRAP_CONTENT showAsDropDown() can't tell that the
+        // menu doesn't fit below the anchor (e.g. the bottom status line), so it never flips it
+        // above and the menu gets clipped by the navigation bar.
+        container.measure(
+            View.MeasureSpec.makeMeasureSpec(finalWidth, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        popup.setHeight(container.getMeasuredHeight());
         return popup;
     }
 

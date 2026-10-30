@@ -263,7 +263,7 @@ private fun RootScreen(activity: Activity, onBack: () -> Unit, onNav: (Route) ->
 
     SettingsScaffold("Settings", onBack) { mod ->
         Column(modifier = mod) {
-            NavRow("Appearance", "Accent color and UI theme") { launch(ThemePickerActivity::class.java) }
+            NavRow("Appearance", "Accent color, UI theme and layout") { launch(ThemePickerActivity::class.java) }
             NavRow("Package Manager", "Browse, search and install packages") { launch(PackageManagerActivity::class.java) }
             NavRow("SSH Manager", "Save and connect to multiple SSH servers") { launch(SshManagerActivity::class.java) }
             NavRow("File Manager", "Browse, edit, and manage files in your Termux home") { launch(FileManagerActivity::class.java) }

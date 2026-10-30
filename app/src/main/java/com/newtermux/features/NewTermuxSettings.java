@@ -28,6 +28,11 @@ public class NewTermuxSettings {
     public static final String KEY_KEEP_ALIVE_BACKGROUND     = "keep_alive_background";
     // Internal one-time gate: set once we have shown the battery-optimization nudge.
     public static final String KEY_BATTERY_OPT_PROMPTED      = "battery_opt_prompted";
+    // Screen layout per orientation (String values below), set in Settings → Appearance.
+    public static final String KEY_LAYOUT_PORTRAIT           = "layout_portrait";
+    public static final String KEY_LAYOUT_LANDSCAPE          = "layout_landscape";
+    public static final String LAYOUT_STANDARD               = "standard";     // toolbar + session previews on top
+    public static final String LAYOUT_STATUS_LINE            = "status_line";  // one tmux-style line at the bottom
 
     private static SharedPreferences prefs(Context ctx) {
         return ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -103,6 +108,14 @@ public class NewTermuxSettings {
     }
     public static void setBatteryOptPrompted(Context ctx, boolean v) {
         prefs(ctx).edit().putBoolean(KEY_BATTERY_OPT_PROMPTED, v).apply();
+    }
+
+    // Screen layout for portrait or landscape. Defaults to the standard layout.
+    public static String getLayout(Context ctx, boolean landscape) {
+        return prefs(ctx).getString(landscape ? KEY_LAYOUT_LANDSCAPE : KEY_LAYOUT_PORTRAIT, LAYOUT_STANDARD);
+    }
+    public static void setLayout(Context ctx, boolean landscape, String layout) {
+        prefs(ctx).edit().putString(landscape ? KEY_LAYOUT_LANDSCAPE : KEY_LAYOUT_PORTRAIT, layout).apply();
     }
 
     // Pending command — written by Settings, consumed and cleared by TermuxActivity.onResume()
