@@ -1,6 +1,30 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, CI-green + staged, NOT device-tested)
+## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, round-1 fixes e2d02ab, CI pending)
+
+**Device test round 1 (8a761e9c installed 14:01 EDT; verified base.apk sha256 3dbb7f7d…,
+versionName 1.6.2+8a761e9):**
+- Startup update check ran: cache/update_latest.json = v1.6.2 at 14:01, prefs update_last_check
+  set; correctly no pill (installed 1.6.2+…). Release asset has a GitHub digest (sha256:8caee7f2…).
+  Highlights parse to 4 items; title kept backticks → fixed. (Info-level logcat lines from the app
+  are not shown on this ROM, so file evidence was used.)
+- Dual screen works (Screenshot_20261030-140244, both screens 1920×2040): top = terminal only,
+  bars hidden; deck on the bottom with header, sessions (live preview), commands, keys.
+- BUG: scroll pad had zero height (deck content > 480 dp minus the bottom nav bar).
+- BUG (user): "my keyboard pops up on the second screen but it wouldn't with that on it".
+  Cause: Retroid system setting `ime_show_on_second=1` → IME on display 2
+  (`mDisplayIdToShowIme=2`, InputMethod window mDisplayId=2); a FLAG_NOT_FOCUSABLE window is
+  Z-ordered above the IME, so the deck covered the keyboard. Also the deck stayed up while the user
+  was in Discord on the top screen.
+- User: how does the second screen come back after closing it? (was: only by resuming NewTermux)
+- User: "+" tile was bigger than the session tiles; wants everything lined up and organized.
+
+**Fix commit e2d02ab:** deck FLAG_ALT_FOCUSABLE_IM (keyboard above the deck); deck closes in
+TermuxActivity.onStop and reopens in onResume, and closes itself when covered on the second
+screen; status-line button `status_btn_deck` (ic_dual_screen) reopens it; deck on one 4-column
+grid (session/new/command tiles one column wide, 8dp gaps, 36dp header buttons, scroll pad right
+column, keys full width); highlight titles without backticks; deck refresh before early returns.
+
 
 **Why:** user: "do we have an app updates also and update notification pills similar to how
 bannerlator works? if not can we add it also" (verified: NewTermux had no update code) and then
