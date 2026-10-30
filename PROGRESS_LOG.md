@@ -1,6 +1,6 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, built, CI pending, NOT device-tested)
+## 2026-10-30 — In-app updater + dual screen (feature/updater-dual-screen, CI-green + staged, NOT device-tested)
 
 **Why:** user: "do we have an app updates also and update notification pills similar to how
 bannerlator works? if not can we add it also" (verified: NewTermux had no update code) and then
@@ -28,6 +28,27 @@ a new APK to test". Branch `feature/updater-dual-screen` off main ca866a17 (layo
   extra keys (TermuxActivity.getExtraKeysView() returns the deck's keys while up, so CTRL/ALT
   work), scroll pad (new `TerminalView.scrollByRows`). Deck closed (✕/Back/system) → status
   line on the top screen until NewTermux is resumed; launch not seen in 3 s → same fallback.
+
+**CI:** Build run 41099978064 on 8a761e9c — success (both jobs, no failed/skipped steps; job log
+BUILD SUCCESSFUL). Checked in the APK: manifest has ControlDeckActivity, UpdateFileProvider with
+authority com.termux.updates, deck taskAffinity com.termux.deck; dex has the update/deck classes and
+TerminalView.scrollByRows; res/xml/newtermux_update_paths.xml present.
+**Staged:** `/sdcard/Download/NewTermux-updater-dual-8a761e9c.apk` (apt-android-7 arm64-v8a),
+sha256 3dbb7f7d0ef2d75e6cb5d23cfdd27ef04d64061f50ad9c2acf3ad7bd76a1aac2 (CI list = host = device),
+cert B6:DA:01:48… (same as installed 1.6.2+3541ee1) → in-place update.
+
+**CHECKPOINT / RESUME POINT (17:56 UTC):** user installs it (ends the session). After `cc -c`:
+verify base.apk sha256 == 3dbb7f7d… and versionName 1.6.2+8a761e9, crash buffer. Test plan:
+1. Settings → Updates: installed version, Check now ("up to date (v1.6.2)").
+2. Test build → "Pretend this is version 0.0.0" on → Check now → dialog for v1.6.2 (highlights
+   from the release notes) → Update now → install-permission prompt if needed → download card →
+   Android installer appears → CANCEL there (installing v1.6.2 would remove the test build).
+3. Back on the terminal (pretend still on, Dismiss not used): pill top-right below the header.
+4. Settings → Appearance → Landscape → Dual screen → back: top = terminal only, bars hidden;
+   bottom screen = deck. Try: tabs/previews switch, a drawer command, extra keys incl. CTRL+C,
+   scroll pad, AC/mic/settings/+, ✕ → status line returns on top; reopen NewTermux → deck back.
+5. Hardware/controller input still goes to the terminal while the deck is up.
+6. logcat NT_UPDATE / NT_DECK, crash buffer (ignore Magisk `content` tombstones, gms lowpool).
 
 ## 2026-10-30 — Layout modes phase 1 MERGED to main (status line); next: updater + dual screen on one branch
 
