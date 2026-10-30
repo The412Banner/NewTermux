@@ -1,6 +1,25 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — Layout modes: status line + dual screen (feature/layout-modes, phase 1 CI-green + staged, NOT device-tested)
+## 2026-10-30 — Layout modes: status line + dual screen (feature/layout-modes, phase 1 on device, round-1 fixes building)
+
+**Device test round 1 (Duo, build ec53f974 installed 12:39 EDT, verified: base.apk sha256 1338690f…,
+versionName 1.6.2+ec53f97):**
+- OK: Settings → Appearance → Layout section renders (screencap); Landscape → Status line works
+  (bottom line: ☰, tabs `1:Claude` `2:#2`, toolbar buttons, ⌨); ☰ opens the left drawer; ⌨ opens
+  the right keys drawer (user has extra keys in drawer mode); tabs listed per session.
+- BUG (pre-existing, more visible now): left drawer not scrollable — buttons past the bottom are cut
+  off (Screenshot_20261030-124127).
+- BUG: long-press on a status-line tab → NtPopupMenu `showAsDropDown()` clipped by the nav bar
+  (tiny box under the tab, Screenshot_20261030-124250). Cause: popup height WRAP_CONTENT, so
+  PopupWindow can't detect the overflow and never flips above the anchor.
+- Request: thin divider under the status line (separate it from the nav bar).
+- Crash buffer: one tombstone at 12:39:09 = Magisk's `content call … notify from.uid 10122` (root
+  notice when NewTermux's startup `su -c id` ran) → ClassNotFoundException: this ROM has no
+  `/system/bin/content` / `content.jar`. Not NewTermux code (RootToggleManager unchanged on branch).
+- Not yet tested: AC/mic colors, rotation to portrait, portrait status line, soft keyboard.
+
+**Fix commit 118134e1:** left drawer → ScrollView (`left_drawer` id kept; not referenced in Java),
+NtPopupMenu measures its final height (EXACTLY width) and sets it, 1dp divider under the status line.
 
 **Why:** On the Retroid Pocket Duo in landscape (1920×1080 top screen) the terminal only gets
 685 px of height (≈22 rows): the toolbar (95 px) and session preview row (158 px) take the rest.
