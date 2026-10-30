@@ -1,6 +1,18 @@
 # NewTermux Progress Log
 
-## 2026-10-30 — Fix: dual-screen deck showed no sessions (feature/deck-session-refresh, building)
+## 2026-10-30 — Fix: dual-screen deck showed no sessions (feature/deck-session-refresh, CI-green + staged)
+
+**CI:** Build run 41123994051 on df01851c — success (BUILD SUCCESSFUL, 0 errors, no Kotlin w:/e:).
+**Staged:** `/sdcard/Download/NewTermux-deck-refresh-df01851c.apk` (apt-android-7 arm64-v8a,
+versionName 2.0.0+df01851, versionCode 29 = installed release → in-place), sha256
+5a70ea388bb25ade7019ad32e5e19c61d94b7779281943f0d0fb14220cad877e (CI = host = device), same cert.
+
+**CHECKPOINT / RESUME POINT (20:42 UTC):** user installs (ends the session). After `cc -c`: verify
+sha256 5a70ea38… + versionName 2.0.0+df01851; screencap display 2: SESSIONS shows every session the
+notification counts; open/close/switch a session → deck follows; no ANR/FATAL. Then (user's word)
+release as v2.0.1: merge to main with backup ref, release-cut commit (versionCode 30, 2.0.1), tag,
+notes, --latest, verify.
+
 
 **Found on v2.0.0 (installed 16:27 EDT via the in-app updater; base.apk sha256 e31821f6… = release
 asset, versionCode 29):** user: "my second screen is not showing all of my open sessions and I know
