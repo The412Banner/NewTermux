@@ -1,5 +1,38 @@
 # NewTermux Progress Log
 
+## 2026-11-22 — Test build: community PRs #22 + #23 (feature/pr22-23-test, CI pending, NOT device-tested)
+
+**Why:** ChaliceChore (issue #21) sent two fixes on 11-09:
+- PR #22 (7e0c02f2): RUN_COMMAND permission back to `dangerous` (as upstream Termux). fa8d1eb (04-21)
+  made it `normal` for the Claude Chat button; 7799e1f removed the button but kept `normal`, so apps
+  installed before NewTermux (e.g. MiXplorer "Open in terminal") never get it and fail silently.
+- PR #23 (c059c197): toolbar text-input page wraps + scrolls vertically; new HorizontalSwipePageSwitcher
+  makes a sideways swipe switch pages instead of moving the caret.
+
+**Review (reading only):** both correct. All users of R.id.terminal_toolbar_text_input use findViewById,
+so the new LinearLayout wrapper is safe; drawer mode has no ViewPager. Follow-up idea (not a blocker):
+Shift+Enter newlines go raw through session.write; TerminalEmulator.paste() (\n→\r + bracketed paste)
+would be safer. Nothing on the Pocket FIT requests RUN_COMMAND except com.termux itself.
+
+**User decision (11-22):** "yes build the test version".
+
+**Built:** branch feature/pr22-23-test = 7e0c02f2 + merge of c059c197 (0831d5c), files identical to the
+PR heads; this log commit on top. Not for main: if the test passes, the PRs themselves get merged.
+
+**Test plan (Pocket FIT, Android 14, runs NewTermux 2.0.1 and hosts the Claude session):**
+- #23: long text wraps + vertical scroll; swipe right → extra keys, swipe left → text input; tap places
+  caret, long-press selects, long-press-drag extends selection; keyboard Send sends text, empty Send =
+  Enter; Shift+Enter via `input keycombination KEYCODE_SHIFT_LEFT KEYCODE_ENTER` → new line; accent line
+  below text with keyboard open/closed; one-row extra keys height.
+- #22: `dumpsys package com.termux` shows `prot=dangerous`; a client app (MiXplorer) can request it and
+  "Open in terminal" opens a session in the folder (needs a client app installed - user's call).
+- logcat FATAL/ANR check for com.termux.
+
+**RESUME POINT:** wait for the Build run on this commit (assert headSha), download
+apt-android-7 arm64-v8a, sha256 vs sha256sums + cert B6:DA:01:48… + versionName 2.0.1+<sha7>, stage
+/sdcard/Download/NewTermux-pr22-23-<sha8>.apk (hash host == device), save memory, ASK before install
+(install ends this session).
+
 ## 2026-10-30 — Cleanup: merged branches + old v2.3.0 release deleted (user)
 
 User: "delete the merged branches and the v2.3.0 release".
