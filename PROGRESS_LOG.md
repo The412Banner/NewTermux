@@ -12,7 +12,12 @@ leave #8, #10, #11 open as maybe later; #12/#13/#18 left open: no gain, no warni
 - Backup `refs/backup/20261122/main-before-pr14` = cad978ce; merged with `--match-head-commit 170c050e`
   → merge e4daf5c7 (3 one-line changes: release.yml, build-bootstrap.yml, build-bootstrap-source.yml).
 - Earlier note "29e042a5 supersedes the Dependabot PRs" was wrong: it bumped other actions.
-- Replies to #21, #20, #19 drafted, shown to the user, NOT posted yet.
+- Replies posted after the user's "do it" (11-22 ~19:00 EST): #21 issuecomment-7087741415 (PRs merged,
+  #23 test result, #22 fresh-install-only finding, extra-keys editor PR welcome; issue left open);
+  #20 issuecomment-7087741645 + closed as completed (same cause as #22, workaround: allow-external-apps +
+  reinstall Script Runner); #19 issuecomment-7087742273 + closed as not planned (package name is built
+  into all Termux packages).
+- Open now: issues #8 #10 #11 #21; PRs #12 #13 #18.
 
 
 ## 2026-11-22 — Community PRs #22 + #23 MERGED to main (user go)
