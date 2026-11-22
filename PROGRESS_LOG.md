@@ -28,7 +28,18 @@ PR heads; this log commit on top. Not for main: if the test passes, the PRs them
   "Open in terminal" opens a session in the folder (needs a client app installed - user's call).
 - logcat FATAL/ANR check for com.termux.
 
-**RESUME POINT:** wait for the Build run on this commit (assert headSha), download
+**CI:** Build run 45080644739 on 126a19c4 (headSha checked) — success, both jobs (apt-android-5/-7);
+apt-android-7 job log: BUILD SUCCESSFUL, no `##[error]`, no warnings in the changed files.
+**APK checked:** arm64-v8a sha256 5e5a353c0c244620536b809629c05a6d3f307765566133a989eda6ae95d3d8c1
+(= CI sha256sums); versionName 2.0.1+126a19c, versionCode 30 (= installed 2.0.1); cert b6da0148…e5e1
+(= installed 2.0.1, sha 8765cccd… → in-place update keeps data); manifest RUN_COMMAND
+protectionLevel 0x1 = dangerous; class TerminalToolbarViewPager$HorizontalSwipePageSwitcher present.
+**Staged:** /sdcard/Download/NewTermux-pr22-23-126a19c4.apk (CI = host = device sha256 5e5a353c…).
+
+**RESUME POINT (11-22 18:06 EST):** waiting for the user's yes to install (ends the Claude session
+running inside NewTermux on the FIT). After restart: verify installed base.apk sha256 == 5e5a353c… and
+versionName 2.0.1+126a19c, then run the test plan above, then logcat FATAL/ANR check. No background
+jobs. Old note kept for history: wait for the Build run on this commit (assert headSha), download
 apt-android-7 arm64-v8a, sha256 vs sha256sums + cert B6:DA:01:48… + versionName 2.0.1+<sha7>, stage
 /sdcard/Download/NewTermux-pr22-23-<sha8>.apk (hash host == device), save memory, ASK before install
 (install ends this session).
