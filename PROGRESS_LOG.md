@@ -1,5 +1,83 @@
 # NewTermux Progress Log
 
+## 2026-11-22 — Community PRs #22 + #23 MERGED to main (user go)
+
+User: "yes go ahead with 1-3" (merge #23, merge #22, reply to ChaliceChore after showing the text).
+- Backup ref `refs/backup/20261122/main-before-pr22-pr23` = 0a5aa461 (pushed).
+- `gh pr merge --merge --match-head-commit`: #22 (7e0c02f2) → merge d74085e2, #23 (c059c197) → merge
+  0c14b565. Contributor commits kept as they are (authorship ChaliceChore).
+- Merged main tree == tested code commit 0831d5c (git diff empty); vs the installed test build 126a19c4
+  only PROGRESS_LOG differs.
+- Proof: #23 USER-PROVEN on the Pocket FIT; #22 CI-green but its effect is only on fresh installs
+  (Android keeps `normal` on update, see below) → fresh-install behaviour NOT device-tested.
+- No release (user's call). Test branch feature/pr22-23-test kept until the user says.
+
+## 2026-11-22 — Test build: community PRs #22 + #23 (feature/pr22-23-test, CI pending, NOT device-tested)
+
+**Why:** ChaliceChore (issue #21) sent two fixes on 11-09:
+- PR #22 (7e0c02f2): RUN_COMMAND permission back to `dangerous` (as upstream Termux). fa8d1eb (04-21)
+  made it `normal` for the Claude Chat button; 7799e1f removed the button but kept `normal`, so apps
+  installed before NewTermux (e.g. MiXplorer "Open in terminal") never get it and fail silently.
+- PR #23 (c059c197): toolbar text-input page wraps + scrolls vertically; new HorizontalSwipePageSwitcher
+  makes a sideways swipe switch pages instead of moving the caret.
+
+**Review (reading only):** both correct. All users of R.id.terminal_toolbar_text_input use findViewById,
+so the new LinearLayout wrapper is safe; drawer mode has no ViewPager. Follow-up idea (not a blocker):
+Shift+Enter newlines go raw through session.write; TerminalEmulator.paste() (\n→\r + bracketed paste)
+would be safer. Nothing on the Pocket FIT requests RUN_COMMAND except com.termux itself.
+
+**User decision (11-22):** "yes build the test version".
+
+**Built:** branch feature/pr22-23-test = 7e0c02f2 + merge of c059c197 (0831d5c), files identical to the
+PR heads; this log commit on top. Not for main: if the test passes, the PRs themselves get merged.
+
+**Test plan (Pocket FIT, Android 14, runs NewTermux 2.0.1 and hosts the Claude session):**
+- #23: long text wraps + vertical scroll; swipe right → extra keys, swipe left → text input; tap places
+  caret, long-press selects, long-press-drag extends selection; keyboard Send sends text, empty Send =
+  Enter; Shift+Enter via `input keycombination KEYCODE_SHIFT_LEFT KEYCODE_ENTER` → new line; accent line
+  below text with keyboard open/closed; one-row extra keys height.
+- #22: `dumpsys package com.termux` shows `prot=dangerous`; a client app (MiXplorer) can request it and
+  "Open in terminal" opens a session in the folder (needs a client app installed - user's call).
+- logcat FATAL/ANR check for com.termux.
+
+**CI:** Build run 45080644739 on 126a19c4 (headSha checked) — success, both jobs (apt-android-5/-7);
+apt-android-7 job log: BUILD SUCCESSFUL, no `##[error]`, no warnings in the changed files.
+**APK checked:** arm64-v8a sha256 5e5a353c0c244620536b809629c05a6d3f307765566133a989eda6ae95d3d8c1
+(= CI sha256sums); versionName 2.0.1+126a19c, versionCode 30 (= installed 2.0.1); cert b6da0148…e5e1
+(= installed 2.0.1, sha 8765cccd… → in-place update keeps data); manifest RUN_COMMAND
+protectionLevel 0x1 = dangerous; class TerminalToolbarViewPager$HorizontalSwipePageSwitcher present.
+**Staged:** /sdcard/Download/NewTermux-pr22-23-126a19c4.apk (CI = host = device sha256 5e5a353c…).
+
+**User 11-22 ~18:25 EST: "yes install it".** Install by Claude via `pm install -r` (root). Before it: all
+3 Claude panes (tmux -L cc: claude/claude-2/claude-3) checked in cgroup 0::/ oom -1000, outside
+Termux's /uid_10183/pid_2913 → expected to survive; reattach = open NewTermux, `cc` once per tab.
+First real test of a session surviving an app UPDATE.
+
+**Device test (11-22, Pocket FIT, Android 14):**
+- Installed 18:19:17 EST by `pm install -r` → Success; versionName 2.0.1+126a19c, base.apk sha256 5e5a353c…
+- All 3 protected Claude sessions (tmux -L cc) SURVIVED the app update: AM killed com.termux pid 2913
+  (exit-info reason 16 PACKAGE UPDATED), panes kept pids 14127/20894/23143; `cc` reattached them.
+- **#22:** Android refused the change on update: `W/PackageManager: Package com.termux trying to change a
+  non-runtime permission com.termux.permission.RUN_COMMAND to runtime; keeping old protection level`;
+  dumpsys still `prot=normal`. → #22 only affects FRESH installs; updating users keep `normal`. Not
+  tested on a fresh install (would wipe NewTermux data).
+- **#23: USER-PROVEN** ("all works", 18:24 EST): wrap + vertical scroll, swipe back to extra keys,
+  tap/long-press/long-press-drag, Send + empty Send = Enter, accent line. Shift+Enter not tested.
+- No crash-buffer entries, no FATAL/ANR for com.termux after 18:19:17; app pid 18667 unchanged since
+  launch 18:19:22.
+
+**Open / Next (user decides):** merge #23 (and #22?) on GitHub; reply to ChaliceChore with the #22
+update finding; issue #21 extra-keys editor question; no release until the user says.
+
+**RESUME POINT (11-22 18:06 EST, superseded):** waiting for the user's yes to install (ends the Claude session
+running inside NewTermux on the FIT). After restart: verify installed base.apk sha256 == 5e5a353c… and
+versionName 2.0.1+126a19c, then run the test plan above, then logcat FATAL/ANR check. No background
+jobs. Old note kept for history: wait for the Build run on this commit (assert headSha), download
+apt-android-7 arm64-v8a, sha256 vs sha256sums + cert B6:DA:01:48… + versionName 2.0.1+<sha7>, stage
+/sdcard/Download/NewTermux-pr22-23-<sha8>.apk (hash host == device), save memory, ASK before install
+(install ends this session).
+
+
 ## 2026-10-30 — Cleanup: merged branches + old v2.3.0 release deleted (user)
 
 User: "delete the merged branches and the v2.3.0 release".
