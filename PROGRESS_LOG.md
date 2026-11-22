@@ -1,5 +1,20 @@
 # NewTermux Progress Log
 
+## 2026-11-22 — Dependabot PR #14 merged (action-gh-release v2 → v3); issue replies drafted
+
+User: "yes do that" (merge #14; post replies for #21 + #20 after showing the text; decline + close #19;
+leave #8, #10, #11 open as maybe later; #12/#13/#18 left open: no gain, no warnings on normal builds).
+- Why #14: the v2.0.1 release run 41130305467 warned "Node.js 20 is deprecated … being forced to run on
+  Node.js 24: softprops/action-gh-release@v2". v3.0.0 only moves the runtime to Node 24 (action.yml
+  `using: node24`); every input we use (files, tag_name, prerelease, generate_release_notes, body) still
+  exists in v3. PR checks (Build apt-android-5/-7) green; a normal Build does not run this action, so the
+  real proof is the next release run.
+- Backup `refs/backup/20261122/main-before-pr14` = cad978ce; merged with `--match-head-commit 170c050e`
+  → merge e4daf5c7 (3 one-line changes: release.yml, build-bootstrap.yml, build-bootstrap-source.yml).
+- Earlier note "29e042a5 supersedes the Dependabot PRs" was wrong: it bumped other actions.
+- Replies to #21, #20, #19 drafted, shown to the user, NOT posted yet.
+
+
 ## 2026-11-22 — Community PRs #22 + #23 MERGED to main (user go)
 
 User: "yes go ahead with 1-3" (merge #23, merge #22, reply to ChaliceChore after showing the text).
