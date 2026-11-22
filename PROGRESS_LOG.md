@@ -36,6 +36,11 @@ apt-android-7 job log: BUILD SUCCESSFUL, no `##[error]`, no warnings in the chan
 protectionLevel 0x1 = dangerous; class TerminalToolbarViewPager$HorizontalSwipePageSwitcher present.
 **Staged:** /sdcard/Download/NewTermux-pr22-23-126a19c4.apk (CI = host = device sha256 5e5a353c…).
 
+**User 11-22 ~18:25 EST: "yes install it".** Install by Claude via `pm install -r` (root). Before it: all
+3 Claude panes (tmux -L cc: claude/claude-2/claude-3) checked in cgroup 0::/ oom -1000, outside
+Termux's /uid_10183/pid_2913 → expected to survive; reattach = open NewTermux, `cc` once per tab.
+First real test of a session surviving an app UPDATE.
+
 **RESUME POINT (11-22 18:06 EST):** waiting for the user's yes to install (ends the Claude session
 running inside NewTermux on the FIT). After restart: verify installed base.apk sha256 == 5e5a353c… and
 versionName 2.0.1+126a19c, then run the test plan above, then logcat FATAL/ANR check. No background
