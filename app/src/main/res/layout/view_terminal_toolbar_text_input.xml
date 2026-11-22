@@ -1,16 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<EditText xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- The accent line is a separate view below the text input instead of the EditText's
+     background underline, so wrapped text scrolled to the end cannot draw over it. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/terminal_toolbar_text_input"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:imeOptions="actionSend|flagNoFullscreen"
-    android:maxLines="1"
-    android:inputType="text"
-    android:importantForAutofill="no"
-    android:textColor="@android:color/white"
-    android:textColorHighlight="@android:color/darker_gray"
-    android:paddingTop="0dp"
-    android:textCursorDrawable="@null"
-    android:paddingBottom="0dp"
-    tools:ignore="LabelFor" />
+    android:orientation="vertical">
+
+    <EditText
+        android:id="@+id/terminal_toolbar_text_input"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@null"
+        android:imeOptions="actionSend|flagNoFullscreen"
+        android:inputType="textMultiLine"
+        android:gravity="top|start"
+        android:scrollbars="vertical"
+        android:importantForAutofill="no"
+        android:textColor="@android:color/white"
+        android:textColorHighlight="@android:color/darker_gray"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp"
+        android:paddingTop="0dp"
+        android:paddingBottom="0dp"
+        android:textCursorDrawable="@null"
+        tools:ignore="LabelFor" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_marginBottom="2dp"
+        android:background="?android:attr/colorControlActivated" />
+
+</LinearLayout>
