@@ -41,7 +41,23 @@ protectionLevel 0x1 = dangerous; class TerminalToolbarViewPager$HorizontalSwipeP
 Termux's /uid_10183/pid_2913 → expected to survive; reattach = open NewTermux, `cc` once per tab.
 First real test of a session surviving an app UPDATE.
 
-**RESUME POINT (11-22 18:06 EST):** waiting for the user's yes to install (ends the Claude session
+**Device test (11-22, Pocket FIT, Android 14):**
+- Installed 18:19:17 EST by `pm install -r` → Success; versionName 2.0.1+126a19c, base.apk sha256 5e5a353c…
+- All 3 protected Claude sessions (tmux -L cc) SURVIVED the app update: AM killed com.termux pid 2913
+  (exit-info reason 16 PACKAGE UPDATED), panes kept pids 14127/20894/23143; `cc` reattached them.
+- **#22:** Android refused the change on update: `W/PackageManager: Package com.termux trying to change a
+  non-runtime permission com.termux.permission.RUN_COMMAND to runtime; keeping old protection level`;
+  dumpsys still `prot=normal`. → #22 only affects FRESH installs; updating users keep `normal`. Not
+  tested on a fresh install (would wipe NewTermux data).
+- **#23: USER-PROVEN** ("all works", 18:24 EST): wrap + vertical scroll, swipe back to extra keys,
+  tap/long-press/long-press-drag, Send + empty Send = Enter, accent line. Shift+Enter not tested.
+- No crash-buffer entries, no FATAL/ANR for com.termux after 18:19:17; app pid 18667 unchanged since
+  launch 18:19:22.
+
+**Open / Next (user decides):** merge #23 (and #22?) on GitHub; reply to ChaliceChore with the #22
+update finding; issue #21 extra-keys editor question; no release until the user says.
+
+**RESUME POINT (11-22 18:06 EST, superseded):** waiting for the user's yes to install (ends the Claude session
 running inside NewTermux on the FIT). After restart: verify installed base.apk sha256 == 5e5a353c… and
 versionName 2.0.1+126a19c, then run the test plan above, then logcat FATAL/ANR check. No background
 jobs. Old note kept for history: wait for the Build run on this commit (assert headSha), download
