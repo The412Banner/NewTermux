@@ -1,5 +1,18 @@
 # NewTermux Progress Log
 
+## 2026-11-22 — Release 2.0.2 (stable) in progress
+
+User (~19:20 EST): "make a new stable release". Version 2.0.2 / versionCode 31 (patch: the changes are
+fixes; tag v2.0.2 not used by the old numbering line). Contents since v2.0.1: PR #23 (typing box,
+user-proven on the Pocket FIT), PR #22 (RUN_COMMAND `dangerous`, fresh installs only), PR #14
+(action-gh-release v3 — this release is its first real run). Notes: /root/work/release-notes-v2.0.2.md
+on the Pocket FIT (2 in-app highlights, ChaliceChore credited).
+Plan: release-cut commit → main Build green → annotated tag v2.0.2 at the full sha → release.yml →
+replace notes + `--latest` → verify (latest, tag→commit, run headSha, assets, arm64 sha == digest,
+cert, versionName 2.0.2, no Node 20 warning). The FIT (2.0.1+126a19c) should then be offered 2.0.2 by
+the in-app updater.
+
+
 ## 2026-11-22 — Dependabot PR #14 merged (action-gh-release v2 → v3); issue replies drafted
 
 User: "yes do that" (merge #14; post replies for #21 + #20 after showing the text; decline + close #19;
