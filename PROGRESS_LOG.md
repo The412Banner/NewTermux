@@ -1,8 +1,23 @@
 # NewTermux Progress Log
 
-## 2026-11-22 — Release 2.0.2 (stable) in progress
+## 2026-11-22 — NewTermux 2.0.2 RELEASED (stable, Latest)
 
-User (~19:20 EST): "make a new stable release". Version 2.0.2 / versionCode 31 (patch: the changes are
+- main Build 45085514935 on the release-cut 9d4f08f9: attempt 1 apt-android-5 failed with Maven Central
+  HTTP 429 Too Many Requests (kotlin-gradle-plugin pom) — not our code; `gh run rerun --failed` →
+  attempt 2 green (19:03 EST, both jobs BUILD SUCCESSFUL).
+- 19:03:44 EST annotated tag v2.0.2 (object ce2486f8) → 9d4f08f9770600dcfedc84b11fed7342ef1f9214.
+- Release run 45086554931 (headSha 9d4f08f9) success: BUILD SUCCESSFUL, 0 errors, 0 warnings, no
+  annotations → the Node 20 warning seen at v2.0.1 is gone (action-gh-release v3, PR #14, proven).
+- Published 00:09 UTC (19:09 EST), 10 assets, all with sha256 digests. Notes from
+  /root/work/release-notes-v2.0.2.md, title "NewTermux 2.0.2", `--latest` → releases/latest = v2.0.2.
+- Verified arm64 APK: sha256 dc07959407e54606e2fca6c43dd580262f8172904eb02dfdd05478a9768bb4fa = digest;
+  cert b6da0148…e5e1; versionName 2.0.2 / versionCode 31; RUN_COMMAND protectionLevel 0x1 (dangerous).
+- Not device-tested as a release yet: the Pocket FIT (2.0.1+126a19c, same code) should be offered 2.0.2
+  by the in-app updater.
+
+### Start of this release (log written before the tag)
+
+User (~18:50 EST): "make a new stable release". Version 2.0.2 / versionCode 31 (patch: the changes are
 fixes; tag v2.0.2 not used by the old numbering line). Contents since v2.0.1: PR #23 (typing box,
 user-proven on the Pocket FIT), PR #22 (RUN_COMMAND `dangerous`, fresh installs only), PR #14
 (action-gh-release v3 — this release is its first real run). Notes: /root/work/release-notes-v2.0.2.md
@@ -25,7 +40,7 @@ leave #8, #10, #11 open as maybe later; #12/#13/#18 left open: no gain, no warni
 - Backup `refs/backup/20261122/main-before-pr14` = cad978ce; merged with `--match-head-commit 170c050e`
   → merge e4daf5c7 (3 one-line changes: release.yml, build-bootstrap.yml, build-bootstrap-source.yml).
 - Earlier note "29e042a5 supersedes the Dependabot PRs" was wrong: it bumped other actions.
-- Replies posted after the user's "do it" (11-22 ~19:00 EST): #21 issuecomment-7087741415 (PRs merged,
+- Replies posted after the user's "do it" (11-22 18:39–18:40 EST): #21 issuecomment-7087741415 (PRs merged,
   #23 test result, #22 fresh-install-only finding, extra-keys editor PR welcome; issue left open);
   #20 issuecomment-7087741645 + closed as completed (same cause as #22, workaround: allow-external-apps +
   reinstall Script Runner); #19 issuecomment-7087742273 + closed as not planned (package name is built
