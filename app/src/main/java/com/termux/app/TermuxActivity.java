@@ -1197,10 +1197,8 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
 
     /** Same as Close in the session tab menu. */
     public void closeSession(TerminalSession session) {
-        if (session == null) return;
-        session.finishIfRunning();
-        if (mTermuxTerminalSessionActivityClient != null)
-            mTermuxTerminalSessionActivityClient.removeFinishedSession(session);
+        if (session == null || mTermuxTerminalSessionActivityClient == null) return;
+        mTermuxTerminalSessionActivityClient.closeSession(session);
     }
 
     /** Labels of the left drawer's buttons, in drawer order. */
@@ -1280,9 +1278,7 @@ public final class TermuxActivity extends AppCompatActivity implements ServiceCo
                     if (mTermuxTerminalSessionActivityClient != null)
                         mTermuxTerminalSessionActivityClient.renameSession(session);
                 } else {
-                    session.finishIfRunning();
-                    if (mTermuxTerminalSessionActivityClient != null)
-                        mTermuxTerminalSessionActivityClient.removeFinishedSession(session);
+                    closeSession(session);
                 }
             });
     }
