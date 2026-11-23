@@ -37,7 +37,9 @@ import com.termux.terminal.TextStyle;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
 /** The {@link TerminalSessionClient} implementation that may require an {@link Activity} for its interface methods. */
 public class TermuxTerminalSessionActivityClient extends TermuxTerminalSessionClientBase {
@@ -49,6 +51,9 @@ public class TermuxTerminalSessionActivityClient extends TermuxTerminalSessionCl
     private SoundPool mBellSoundPool;
 
     private int mBellSoundId;
+
+    /** Sessions the user chose to close that were killed but have not exited yet. */
+    private final Set<TerminalSession> mSessionsPendingClose = new HashSet<>();
 
     private static final String LOG_TAG = "TermuxTerminalSessionActivityClient";
 
@@ -150,6 +155,10 @@ public class TermuxTerminalSessionActivityClient extends TermuxTerminalSessionCl
 
         int index = service.getIndexOfSession(finishedSession);
 
+        // The user chose Close on this session while it was still running: remove it now that
+        // the process has exited, whatever the exit status (SIGKILL gives 9).
+        boolean closeRequested = mSessionsPendingClose.remove(finishedSession);
+
         // For plugin commands that expect the result back, we should immediately close the session
         // and send the result back instead of waiting fo the user to press enter.
         // The plugin can handle/show errors itself.
@@ -161,7 +170,7 @@ public class TermuxTerminalSessionActivityClient extends TermuxTerminalSessionCl
                 Logger.logVerbose(LOG_TAG, "The \"" + finishedSession.mSessionName + "\" session will be force finished automatically since result in pending.");
         }
 
-        if (mActivity.isVisible() && finishedSession != mActivity.getCurrentSession()) {
+        if (mActivity.isVisible() && finishedSession != mActivity.getCurrentSession() && !closeRequested) {
             // Show toast for non-current sessions that exit.
             // Verify that session was not removed before we got told about it finishing:
             if (index >= 0)
@@ -177,7 +186,7 @@ public class TermuxTerminalSessionActivityClient extends TermuxTerminalSessionCl
         } else {
             // Once we have a separate launcher icon for the failsafe session, it
             // should be safe to auto-close session on exit code '0' or '130'.
-            if (finishedSession.getExitStatus() == 0 || finishedSession.getExitStatus() == 130 || isPluginExecutionCommandWithPendingResult) {
+            if (finishedSession.getExitStatus() == 0 || finishedSession.getExitStatus() == 130 || isPluginExecutionCommandWithPendingResult || closeRequested) {
                 removeFinishedSession(finishedSession);
             }
         }
@@ -448,6 +457,22 @@ public class TermuxTerminalSessionActivityClient extends TermuxTerminalSessionCl
         if (service == null) return null;
 
         return service.getTerminalSessionForHandle(sessionHandle);
+    }
+
+    /**
+     * Close a session, killing its process first if it is still running.
+     *
+     * SIGKILL is asynchronous: the session counts as running until its process has been reaped,
+     * and {@link TermuxSession#finish()} ignores a running session. So a running session is only
+     * marked here and is removed in {@link #onSessionFinished} once it has exited.
+     */
+    public void closeSession(@NonNull TerminalSession session) {
+        if (session.isRunning()) {
+            mSessionsPendingClose.add(session);
+            session.finishIfRunning();
+        } else {
+            removeFinishedSession(session);
+        }
     }
 
     public void removeFinishedSession(TerminalSession finishedSession) {
